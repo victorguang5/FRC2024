@@ -97,8 +97,8 @@ public class RobotContainer
                         OperatorConstants.LEFT_Y_DEADBAND),
                 () -> MathUtil.applyDeadband(driverController.getLeftX(),
                         OperatorConstants.LEFT_X_DEADBAND),
-                () -> -driverController.getRightX(),
-                () -> -driverController.getRightY(),
+                () -> driverController.getRightX(),
+                () -> driverController.getRightY(),
                 driverController::getRightBumper,
                 driverController::getLeftBumper,
                 () -> false
