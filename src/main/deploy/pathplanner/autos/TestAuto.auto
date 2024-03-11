@@ -1,0 +1,55 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 1.24,
+      "y": 5.56
+    },
+    "rotation": 180.0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Speaker1toGP2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "GP2toSpeaker1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Speaker1toGP1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "GP1toSpeaker1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Speaker1toGP3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "GP3toSpeaker1"
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": false
+}

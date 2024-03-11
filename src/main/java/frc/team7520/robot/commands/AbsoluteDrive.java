@@ -93,19 +93,24 @@ private boolean initRotation = false;
             desiredSpeeds = swerve.getTargetSpeeds(vX.getAsDouble(), vY.getAsDouble(), swerve.getHeading().plus(Rotation2d.fromDegrees(20)));
         } else {
             // Get the desired chassis speeds based on a 2 joystick module.
-            desiredSpeeds = swerve.getTargetSpeeds(vX.getAsDouble(), vY.getAsDouble(),
-                    headingHorizontal.getAsDouble(),
+            // When no button press or joystick press, robot should not rotate
+            // Prevent any movement after path planner operation or reset odometer
+            if( headingHorizontal.getAsDouble() < 0.1 && headingVertical.getAsDouble() < 0.1)
+            {
+                desiredSpeeds = swerve.getTargetSpeeds(vX.getAsDouble()/2, vY.getAsDouble()/2, swerve.getHeading());
+            }
+            // Get target speed and heading from joystick
+            else
+            {
+                desiredSpeeds = swerve.getTargetSpeeds(vX.getAsDouble()/2, vY.getAsDouble()/2,
+                    headingHorizontal.getAsDouble()/2,
                     headingVertical.getAsDouble());
-            SmartDashboard.putNumber("desiredSpeed.headingH", headingHorizontal.getAsDouble());
-            SmartDashboard.putNumber("desiredSpeed.headingV", headingVertical.getAsDouble());
-            SmartDashboard.putNumber("desiredSpeed.x", desiredSpeeds.vxMetersPerSecond);
-            SmartDashboard.putNumber("desiredSpeed.y", desiredSpeeds.vyMetersPerSecond);
-            SmartDashboard.putNumber("desiredSpeed.omega", desiredSpeeds.omegaRadiansPerSecond);
+            }
+
             SmartDashboard.putNumber("Robot Yaw",swerve.getHeading().getDegrees());
             SmartDashboard.putNumber("Odometer.X", swerve.getPose().getX());
             SmartDashboard.putNumber("Odometer.Y", swerve.getPose().getY());
             SmartDashboard.putNumber("Odometer.Angle", swerve.getPose().getRotation().getRadians());
-            SmartDashboard.putNumber("targetAngle", Math.atan2(headingHorizontal.getAsDouble(),headingVertical.getAsDouble()));
             SmartDashboard.putNumber("Odometer.Angle", swerve.getPose().getRotation().getDegrees());
             
         }
@@ -131,17 +136,7 @@ private boolean initRotation = false;
         SmartDashboard.putNumber("LimitedTranslation", translation.getX());
         SmartDashboard.putString("Translation", translation.toString());
 
-        // Stop the robot from spinning after the auto movement
-        // If no button press, then robot should stay still
-        /* 
-        double omega = (Math.abs(headingHorizontal.getAsDouble()) < 0.1 
-        && (Math.abs(headingVertical.getAsDouble()) < 0.1)
-        && CCWSpin.getAsBoolean()
-        && CWSpin.getAsBoolean())? 0:desiredSpeeds.omegaRadiansPerSecond;
-        */
-        double omega = desiredSpeeds.omegaRadiansPerSecond;
-        // Make the robot move
-       swerve.drive(translation, omega, true);
+       swerve.drive(translation, desiredSpeeds.omegaRadiansPerSecond, true);
 
     }
 

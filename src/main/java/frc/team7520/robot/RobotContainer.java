@@ -8,6 +8,8 @@ package frc.team7520.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathPlannerPath;
+
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -107,205 +109,7 @@ public class RobotContainer
         SmartDashboard.putNumber("Swerve Base:", Constants.Drivebase.SWERVE_BASE_NUMBER);
                 // Configure the trigger bindings
 
-        NamedCommands.registerCommand(
-                "ResetOdometer", 
-                new InstantCommand(()->{                        
-                        drivebase.resetOdometry(new Pose2d());
-                        Pose2d curPose = drivebase.getPose();
-                        SmartDashboard.putNumber("Odometer x:", curPose.getX());
-                        SmartDashboard.putNumber("Odometer y:", curPose.getY());
-                        SmartDashboard.putNumber("Odometer angle:", curPose.getRotation().getDegrees());
 
-                }));
-
-        NamedCommands.registerCommand(
-                "MyTestCommand", 
-                new InstantCommand(()->{                        
-                        intakeSubsystem.setPosition(
-                                Rotation2d.fromDegrees(
-                                        Constants.IntakeConstants.PivotConstants.Intake
-                                )
-                        );
-                        intakeSubsystem.currPosition = Constants.Position.INTAKE;
-                        intakeSubsystem.setAutoSpeed(-0.35, false);                          
-                }));
-
-        NamedCommands.registerCommand(
-                "BackwardX1M", 
-                new InstantCommand(()->{
-                        PathPlannerHelper.Move_X(drivebase, -1.5);
-                }));
-
-        NamedCommands.registerCommand(
-                "ForwardX1M", 
-                new InstantCommand(()->{
-                        PathPlannerHelper.Move_X(drivebase, 1.5);
-                }));
-
-        NamedCommands.registerCommand(
-                "RedLeftSideTurn", 
-                new InstantCommand(()->{
-                        Pose2d curPose = drivebase.getPose();
-                        Pose2d endPose = new Pose2d(
-                                new Translation2d(-1.3, -2),
-                                Rotation2d.fromDegrees(0)
-                        );
-                        var cmd = PathPlannerHelper.goToPose(drivebase, endPose);
-                        CommandScheduler.getInstance().schedule(cmd);
-                }));
-
-        NamedCommands.registerCommand(
-                "RedRightSideTurn", 
-                new InstantCommand(()->{
-                        Pose2d curPose = drivebase.getPose();
-                        Pose2d endPose = new Pose2d(
-                                new Translation2d(-2, 1),
-                                Rotation2d.fromDegrees(0)
-                        );
-                        var cmd = PathPlannerHelper.goToPose(drivebase, endPose);
-                        CommandScheduler.getInstance().schedule(cmd);
-                }));
-
-
-
-        NamedCommands.registerCommand(
-                "BlueRightSideTurn", 
-                new InstantCommand(()->{
-                        Pose2d curPose = drivebase.getPose();
-                        Pose2d endPose = new Pose2d(
-                                new Translation2d(-1.3, 2),
-                                Rotation2d.fromDegrees(0)
-                        );
-                        var cmd = PathPlannerHelper.goToPose(drivebase, endPose);
-                        CommandScheduler.getInstance().schedule(cmd);
-                }));
-
-        NamedCommands.registerCommand(
-                "BlueLeftSideTurn", 
-                new InstantCommand(()->{
-                        Pose2d curPose = drivebase.getPose();
-                        Pose2d endPose = new Pose2d(
-                                new Translation2d(-2, -1),
-                                Rotation2d.fromDegrees(0)
-                        );
-                        var cmd = PathPlannerHelper.goToPose(drivebase, endPose);
-                        CommandScheduler.getInstance().schedule(cmd);
-                }));
-
-        NamedCommands.registerCommand(
-                "RightSideTurn", 
-                new InstantCommand(()->{
-                        Pose2d curPose = drivebase.getPose();
-                        Pose2d endPose = new Pose2d(
-                                new Translation2d(-0.7, 1.5),
-                                Rotation2d.fromDegrees(0)
-                        );
-                        var cmd = PathPlannerHelper.goToPose(drivebase, endPose);
-                        CommandScheduler.getInstance().schedule(cmd);
-                }));
-
-
-        NamedCommands.registerCommand(
-                "ShootOnSite", 
-                new InstantCommand(()->{
-                        shooterSubsystem.setSpeed(1, false);
-                        try {
-                                Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                        }
-                        intakeSubsystem.setAutoSpeed(0.35, false);
-                        try {
-                                Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                        }
-                        intakeSubsystem.setSpeed(0, false);
-                        shooterSubsystem.setSpeed(0, false);
-                        intakeSubsystem.AutoMode = false;
-                }));
-
-
-        NamedCommands.registerCommand(
-                "IntakeDown", 
-                new InstantCommand(()->{
-                        intakeSubsystem.setPosition(Rotation2d.fromDegrees(Constants.IntakeConstants.PivotConstants.Intake));
-                        intakeSubsystem.setAutoSpeed(-0.35, false);
-                }));
-
-
-        NamedCommands.registerCommand(
-                "IntakeSpeedStop", 
-                new InstantCommand(()->{
-                        intakeSubsystem.setSpeed(0, false);
-                }));
-
-
-
-        NamedCommands.registerCommand(
-                "IntakeUp", 
-                new InstantCommand(()->{
-                        intakeSubsystem.setPosition(Rotation2d.fromDegrees(Constants.IntakeConstants.PivotConstants.Shoot));
-                }));
-
-        NamedCommands.registerCommand(
-                "PhotonResetPose", 
-                new InstantCommand(()->{
-                        var photonPose = drivebase.GetPhotonvisionPose2d();
-                        SmartDashboard.putBoolean("Photon found", (photonPose != null));
-                        if (photonPose != null)
-                        {
-                            drivebase.resetOdometry(photonPose); 
-                        }
-                }));
-
-        NamedCommands.registerCommand(
-                "SetPosition_Intake", 
-                new InstantCommand(()->{
-                        SmartDashboard.putBoolean("SetPositio start", true);
-                        intakeSubsystem.setPosition(
-                                Rotation2d.fromDegrees(
-                                        Constants.IntakeConstants.PivotConstants.Intake
-                                )
-                        );     
-                        SmartDashboard.putBoolean("SetPositio end", true);               
-                }));
-
-        NamedCommands.registerCommand(
-                "SetPosition_Shoot", 
-                new InstantCommand(()->{
-                        intakeSubsystem.setPosition(
-                                Rotation2d.fromDegrees(
-                                        Constants.IntakeConstants.PivotConstants.Shoot
-                                )
-                        );                    
-                }));
-
-        NamedCommands.registerCommand(
-                "SetPosition_Amp", 
-                new InstantCommand(()->{
-                        intakeSubsystem.setPosition(
-                                Rotation2d.fromDegrees(
-                                        Constants.IntakeConstants.PivotConstants.Amp
-                                )
-                        );                    
-                }));
-
-        NamedCommands.registerCommand(
-                "SetSpeed_Intake", 
-                new InstantCommand(()->{
-                        intakeSubsystem.setAutoSpeed(-0.35, false);
-                }));
-
-        NamedCommands.registerCommand(
-                "SetSpeed_Shoot", 
-                new InstantCommand(()->{
-                        intakeSubsystem.setAutoSpeed(0.35, false);
-                }));
-
-        NamedCommands.registerCommand(
-                "SetSpeed_Amp", 
-                new InstantCommand(()->{
-                        intakeSubsystem.setAutoSpeed(0.525, false);
-                }));
 
         // Left joystick is the angle of the robot
         AbsoluteDrive closedAbsoluteDrive = new AbsoluteDrive(drivebase,
@@ -364,23 +168,17 @@ public class RobotContainer
 
         // Display Chooser 
         autoChooser = AutoBuilder.buildAutoChooser();
+        //autoChooser.setDefaultOption("Profile-22", AutoBuilder.followPath(PathPlannerPath.fromPathFile("X+1m")));
+       // autoChooser.
+
         SmartDashboard.putData("Auto Mode", autoChooser);
         SmartDashboard.putData("Test Route", pathChooser); 
         myRoute.ConfigureAutoPathProfile();
         myRoute.ConfigureManualPathProfile();        
-        
+        myRoute.ConfigureAutoPathCommand(drivebase,intakeSubsystem,shooterSubsystem);
         configureBindings();
     }
 
-    /**
-     * Use this method to define named commands for use in {@link PathPlannerAuto}
-     *
-     */
-    private void registerNamedCommands()
-    {
-        // Example
-        NamedCommands.registerCommand("Shoot", new WaitCommand(1));
-    }
 
     /**
      * Use this method to define your trigger->command mappings. Triggers can be created via the
@@ -395,7 +193,7 @@ public class RobotContainer
     {
         // Zero gyro
         new JoystickButton(driverController, XboxController.Button.kA.value)
-                .onTrue(new InstantCommand(drivebase::zeroGyro));
+                .onTrue(new InstantCommand(drivebase::myReset));
         // X/Lock wheels
                 new JoystickButton(driverController, XboxController.Button.kX.value)
                 .whileTrue(new RepeatCommand(new InstantCommand(drivebase::lock)));
@@ -422,7 +220,7 @@ public class RobotContainer
                         );
         
         // Run the command from path Chooser list
-
+*/
         new JoystickButton(driverController, XboxController.Button.kB.value)
                 .onTrue(new InstantCommand(()->{
                         //drivebase.resetOdometry(new Pose2d());
@@ -430,7 +228,7 @@ public class RobotContainer
                                 myRoute.getPathPlanerRoute()
                         );
                 }));
-*/
+
     }
 
 
