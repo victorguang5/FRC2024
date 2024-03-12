@@ -128,7 +128,7 @@ public class RobotContainer
                 "ShootOnSite", 
                 new InstantCommand(()->{
                         //* 
-                        shooterSubsystem.setSpeed(1, false);
+                        shooterSubsystem.setSpeed(0.7, false);
                         try {
                                 Thread.sleep(1000);
                         } catch (InterruptedException e) {

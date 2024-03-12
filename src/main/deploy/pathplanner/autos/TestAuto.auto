@@ -12,9 +12,39 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "IntakeDown"
+          }
+        },
+        {
           "type": "wait",
           "data": {
-            "waitTime": 4.0
+            "waitTime": 6.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeUp"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeSpeedStop"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 3.0
           }
         },
         {
