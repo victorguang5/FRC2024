@@ -31,7 +31,7 @@ public class RoutePlanner{
     public void ConfigureAutoPathProfile()
     {
         // Pickup one game piece from position 1 route
-        new PathPlannerAuto("AutoTest");
+        new PathPlannerAuto("TestAuto");
         new PathPlannerAuto("BlueShotOnSite");
         new PathPlannerAuto("BlueShotOnSiteLeft");
         new PathPlannerAuto("BlueShotOnSiteRight");

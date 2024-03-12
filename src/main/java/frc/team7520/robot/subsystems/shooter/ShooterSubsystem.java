@@ -24,6 +24,8 @@ public class ShooterSubsystem extends SubsystemBase {
     private RelativeEncoder leftShooterEncoder;
     private RelativeEncoder rightShooterEncoder;
 
+    public static boolean AutoMode = false;    
+
     private SlewRateLimiter mSpeedLimiter = new SlewRateLimiter(5);
 
     /**

@@ -143,7 +143,7 @@ public class IntakeSubsystem extends SubsystemBase {
     public void setAutoSpeed(double speed, boolean closedLoop) {
         SmartDashboard.putBoolean("setAutoSpeed:", true); 
         setSpeed(speed, closedLoop);
-        AutoMode = true;
+        //AutoMode = true;
     }
 
     public void turnOffAutoMode() {
@@ -152,12 +152,12 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void setSpeed(double speed) {
-        if (!AutoMode)
+        //if (!AutoMode)
             setSpeed(speed, false);
     }
 
     public void setSpeed(double speed, boolean closedLoop) {
-        if (AutoMode) return;
+        //if (AutoMode) return;
         speed = slewRateLimiter.calculate(speed);
 
         if(closedLoop) {
@@ -190,6 +190,7 @@ public class IntakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("diffedEncoder", getDiffedEncoder());
         SmartDashboard.putNumber("PivotAbsEncoder", pivotAbsEncoder.get());
         SmartDashboard.putNumber("wheelsAbsEncoder", wheelAbsEncoder.get());
+        /* 
         if(AutoMode == true && input.get() == false)
         {
             SmartDashboard.putBoolean("setPosition Shoot", true);   
@@ -197,7 +198,7 @@ public class IntakeSubsystem extends SubsystemBase {
             currPosition = Constants.Position.SHOOT;
             setSpeed(0);
             AutoMode = false;
-        }
+        }*/
     }
 }
  

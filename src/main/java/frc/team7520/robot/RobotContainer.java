@@ -127,19 +127,21 @@ public class RobotContainer
         NamedCommands.registerCommand(
                 "ShootOnSite", 
                 new InstantCommand(()->{
+                        //* 
                         shooterSubsystem.setSpeed(1, false);
                         try {
                                 Thread.sleep(1000);
                         } catch (InterruptedException e) {
                         }
+                        //*/
                         intakeSubsystem.setAutoSpeed(0.35, false);
                         try {
                                 Thread.sleep(1000);
                         } catch (InterruptedException e) {
                         }
-                        intakeSubsystem.setSpeed(0, false);
-                        shooterSubsystem.setSpeed(0, false);
-                        intakeSubsystem.AutoMode = false;
+                        intakeSubsystem.stop();
+                        shooterSubsystem.stop();
+                        //intakeSubsystem.AutoMode = false;
                 }));
 
 

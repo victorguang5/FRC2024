@@ -74,6 +74,9 @@ public class Robot extends TimedRobot
     @Override
     public void autonomousInit()
     {
+        intakeSubsystem.AutoMode = true;
+        shooterSubsystem.AutoMode = true;
+
         robotContainer.drivebase.myReset();
         autonomousCommand = robotContainer.getAutonomousCommand();
         
@@ -89,6 +92,7 @@ public class Robot extends TimedRobot
     @Override
     public void autonomousPeriodic() {
 
+        /* 
         if(intakeSubsystem.AutoMode == true && intakeSubsystem.input.get() == false)
         {
             SmartDashboard.putBoolean("setPosition Shoot", true);   
@@ -96,7 +100,7 @@ public class Robot extends TimedRobot
             intakeSubsystem.currPosition = Constants.Position.SHOOT;
             intakeSubsystem.setSpeed(0);
             intakeSubsystem.AutoMode = false;
-        }
+        }*/
 
     }
     
@@ -104,6 +108,9 @@ public class Robot extends TimedRobot
     @Override
     public void teleopInit()
     {
+        intakeSubsystem.AutoMode = false;
+        shooterSubsystem.AutoMode = false;
+
         // This makes sure that the autonomous stops running when
         // teleop starts running. If you want the autonomous to
         // continue until interrupted by another command, remove

@@ -30,9 +30,12 @@ public class Shooter extends Command {
 
     @Override
     public void execute() {
+        if (!shooterSubsystem.AutoMode)
+        {
         double throttle = throttleSup.getAsDouble() * (invertSup.getAsBoolean() ? -1 : 1) * 1;
 
         shooterSubsystem.setSpeed(throttle, false);
+        }
     }
 
     @Override
