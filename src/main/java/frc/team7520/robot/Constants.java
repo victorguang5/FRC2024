@@ -65,7 +65,7 @@ public final class Constants {
     public static class IntakeConstants {
         public enum Position {
             SHOOT(new Rotation2d(0), 1),
-            INTAKE(new Rotation2d(Units.degreesToRadians(211.374d)), 0.35),
+            INTAKE(new Rotation2d(Units.degreesToRadians(212.152317734808d)), -0.35),
             AMP(new Rotation2d(Units.degreesToRadians(90)), 0.525);
 
             private final Rotation2d position;
@@ -104,9 +104,9 @@ public final class Constants {
             public static final double OUTPUT_MAX = 1;
             public static final double OUTPUT_MIN = -1;
 
-            public static final double SmartMaxVel = 20000;
+            public static final double SmartMaxVel = 30000;
             public static final double SmartMinVel = 0;
-            public static final double SmartAccel = 2000;
+            public static final double SmartAccel = 3000;
             public static final double SmartErr = 2;
             public static final int SlotID = 0;
         }

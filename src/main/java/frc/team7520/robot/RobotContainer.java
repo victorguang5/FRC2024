@@ -12,14 +12,18 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import frc.team7520.robot.Constants.IntakeConstants;
+import frc.team7520.robot.Constants.IntakeConstants.Position;
 import frc.team7520.robot.Constants.OperatorConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.team7520.robot.auto.AutoIntake;
 import frc.team7520.robot.auto.ShootSequence;
 import frc.team7520.robot.commands.AbsoluteDrive;
 import frc.team7520.robot.commands.Climber;
@@ -81,7 +85,7 @@ public class RobotContainer
     public RobotContainer()
     {
 
-        registerNamedCommands();
+        registerAutos();
 
         CameraServer.startAutomaticCapture();
 
@@ -93,9 +97,9 @@ public class RobotContainer
                 // Applies deadbands and inverts controls because joysticks
                 // are back-right positive while robot
                 // controls are front-left positive
-                () -> MathUtil.applyDeadband(driverController.getLeftY(),
+                () -> MathUtil.applyDeadband(-driverController.getLeftY(),
                         OperatorConstants.LEFT_Y_DEADBAND),
-                () -> MathUtil.applyDeadband(driverController.getLeftX(),
+                () -> MathUtil.applyDeadband(-driverController.getLeftX(),
                         OperatorConstants.LEFT_X_DEADBAND),
                 () -> driverController.getRightX(),
                 () -> driverController.getRightY(),
@@ -149,13 +153,18 @@ public class RobotContainer
 
     private void registerAutos(){
 
+        registerNamedCommands();
+
         autoChooser.setDefaultOption("Safe auto", drivebase.getPPAutoCommand("safe", true));
         autoChooser.addOption("Amp", drivebase.getPPAutoCommand("Amp", true));
+        autoChooser.addOption("Test", drivebase.getPPAutoCommand("test", true));
         autoChooser.addOption("BotToCentBot", drivebase.getPPAutoCommand("BotToCentBot", true));
         autoChooser.addOption("MidToCentTop", drivebase.getPPAutoCommand("MidToCentTop", true));
         autoChooser.addOption("TopToCentTop", drivebase.getPPAutoCommand("TopToCentTop", true));
+        autoChooser.addOption("2Note", drivebase.getPPAutoCommand("2Note", true));
 
 
+        SmartDashboard.putData(autoChooser);
     }
 
     /**
@@ -167,6 +176,11 @@ public class RobotContainer
         // Example
         NamedCommands.registerCommand("shoot", new ShootSequence());
         NamedCommands.registerCommand("log", new InstantCommand(() -> System.out.println("eeeeeeeeeeeeeeeeeeeeeeeee")));
+        NamedCommands.registerCommand("intakeOut", new AutoIntake(Position.INTAKE));
+        NamedCommands.registerCommand("intake", new InstantCommand(() -> intakeSubsystem.setSpeed(Position.INTAKE.getSpeed())));
+        NamedCommands.registerCommand("stopIntaking", new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
+        NamedCommands.registerCommand("intakeIn", new AutoIntake(Position.SHOOT));
+
     }
 
 
@@ -189,12 +203,12 @@ public class RobotContainer
         new JoystickButton(driverController, XboxController.Button.kX.value)
                 .whileTrue(new RepeatCommand(new InstantCommand(drivebase::lock)));
 
-        new Trigger(() -> intake.currPosition == Constants.IntakeConstants.Position.INTAKE)
+        new Trigger(() -> intake.currPosition == Position.INTAKE)
                 .and(new JoystickButton(operatorController, XboxController.Button.kRightBumper.value))
                 .onTrue(new RepeatCommand(LEDSubsystem.intaking()))
                 .onFalse(LEDSubsystem.idle());
 
-        new Trigger(() -> intake.currPosition == Constants.IntakeConstants.Position.INTAKE)
+        new Trigger(() -> intake.currPosition == Position.INTAKE)
                 .and(new JoystickButton(operatorController, XboxController.Button.kX.value))
                 .whileTrue(new RepeatCommand(LEDSubsystem.intaking()))
                 .onFalse(LEDSubsystem.idle());
@@ -211,6 +225,6 @@ public class RobotContainer
      */
     public Command getAutonomousCommand()
     {
-        return new ShootSequence();
+        return autoChooser.getSelected();
     }
 }
