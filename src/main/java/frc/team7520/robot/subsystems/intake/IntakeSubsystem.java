@@ -30,7 +30,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private final DigitalInput input = new DigitalInput(0);
 
-    private final SlewRateLimiter slewRateLimiter = new SlewRateLimiter(0.5);
+    private final SlewRateLimiter slewRateLimiter = new SlewRateLimiter(5);
 
     public Rotation2d desiredPosition = Rotation2d.fromDegrees(IntakeConstants.PivotConstants.Shoot);
 

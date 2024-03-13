@@ -17,13 +17,13 @@ public class ShootSequence extends SequentialCommandGroup {
                         new AutoIntake(Constants.IntakeConstants.Position.SHOOT),
                         new ParallelRaceGroup(
                                 new AutoShoot(1, false),
-                                new WaitCommand(1)
+                                new WaitCommand(0.1)
                         )
                 ),
                 new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(1)),
                 new WaitCommand(0.5),
-                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(0)),
-                new InstantCommand(() -> ShooterSubsystem.getInstance().setSpeed(0, false))
+                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(0))
+//                new InstantCommand(() -> ShooterSubsystem.getInstance().setSpeed(0, false))
         );
     }
 }

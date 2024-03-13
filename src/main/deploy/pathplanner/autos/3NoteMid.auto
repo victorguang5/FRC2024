@@ -43,15 +43,15 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "Close Mid to Mid"
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "intakeIn"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Close Mid to Mid"
           }
         },
         {
@@ -92,15 +92,15 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "Close Top To Mid"
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "intakeIn"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Close Top To Mid"
           }
         },
         {
@@ -113,6 +113,12 @@
           "type": "named",
           "data": {
             "name": "shoot"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": []
           }
         }
       ]

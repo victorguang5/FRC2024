@@ -228,7 +228,7 @@ public class RobotContainer
     {
         return new SequentialCommandGroup(
                 new ParallelCommandGroup(
-                        new InstantCommand(() -> shooterSubsystem.setDefaultCommand(new AutoShoot(1, false))),
+                        new InstantCommand(() -> shooterSubsystem.setDefaultCommand(new AutoShoot(0.7, false))),
                         autoChooser.getSelected()
                 ),
                 new InstantCommand(() -> shooterSubsystem.setDefaultCommand(shooter))
