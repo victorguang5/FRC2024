@@ -104,9 +104,9 @@ public final class Constants {
             public static final double OUTPUT_MAX = 1;
             public static final double OUTPUT_MIN = -1;
 
-            public static final double SmartMaxVel = 30000;
+            public static final double SmartMaxVel = 600000;
             public static final double SmartMinVel = 0;
-            public static final double SmartAccel = 3000;
+            public static final double SmartAccel = 10000;
             public static final double SmartErr = 2;
             public static final int SlotID = 0;
         }

@@ -81,6 +81,7 @@ public class AbsoluteDrive extends Command {
     @Override
     public void initialize() {
         initRotation = true;
+        SmartDashboard.putBoolean("initRotation", initRotation);
     }
 
     // Called every time the scheduler runs while the command is scheduled.
@@ -113,6 +114,8 @@ public class AbsoluteDrive extends Command {
 
                 // Set the Current Heading to the desired Heading
                 desiredSpeeds = swerve.getTargetSpeeds(0, 0, firstLoopHeading.getSin(), firstLoopHeading.getCos());
+
+                SmartDashboard.putBoolean("initRotation", initRotation);
             }
             //Dont Init Rotation Again
             initRotation = false;

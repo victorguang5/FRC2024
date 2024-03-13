@@ -30,7 +30,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "test"
+                  "pathName": "Mid To Close Mid"
                 }
               },
               {
@@ -45,7 +45,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "test2"
+            "pathName": "Close Mid to Mid"
           }
         },
         {

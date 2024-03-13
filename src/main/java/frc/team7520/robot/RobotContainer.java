@@ -13,17 +13,15 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.team7520.robot.Constants.IntakeConstants;
 import frc.team7520.robot.Constants.IntakeConstants.Position;
 import frc.team7520.robot.Constants.OperatorConstants;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.team7520.robot.auto.AutoIntake;
+import frc.team7520.robot.auto.AutoShoot;
 import frc.team7520.robot.auto.ShootSequence;
 import frc.team7520.robot.commands.AbsoluteDrive;
 import frc.team7520.robot.commands.Climber;
@@ -78,6 +76,8 @@ public class RobotContainer
             intakeSubsystem::getSwitchVal
         );
 
+    private Shooter shooter;
+
 
 
 
@@ -108,7 +108,7 @@ public class RobotContainer
                 () -> false
         );
 
-        Shooter shooter = new Shooter(shooterSubsystem,
+         shooter = new Shooter(shooterSubsystem,
                 operatorController::getLeftTriggerAxis,
                 operatorController::getLeftBumper
         );
@@ -161,7 +161,8 @@ public class RobotContainer
         autoChooser.addOption("BotToCentBot", drivebase.getPPAutoCommand("BotToCentBot", true));
         autoChooser.addOption("MidToCentTop", drivebase.getPPAutoCommand("MidToCentTop", true));
         autoChooser.addOption("TopToCentTop", drivebase.getPPAutoCommand("TopToCentTop", true));
-        autoChooser.addOption("2Note", drivebase.getPPAutoCommand("2Note", true));
+        autoChooser.addOption("2Note", drivebase.getPPAutoCommand("2NoteMid", true));
+        autoChooser.addOption("3NoteMid", drivebase.getPPAutoCommand("3NoteMid", true));
 
 
         SmartDashboard.putData(autoChooser);
@@ -225,6 +226,12 @@ public class RobotContainer
      */
     public Command getAutonomousCommand()
     {
-        return autoChooser.getSelected();
+        return new SequentialCommandGroup(
+                new ParallelCommandGroup(
+                        new InstantCommand(() -> shooterSubsystem.setDefaultCommand(new AutoShoot(1, false))),
+                        autoChooser.getSelected()
+                ),
+                new InstantCommand(() -> shooterSubsystem.setDefaultCommand(shooter))
+        );
     }
 }
