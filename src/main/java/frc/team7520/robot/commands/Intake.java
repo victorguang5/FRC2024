@@ -50,7 +50,7 @@ public class Intake extends Command {
             return;
         }
         if (shootSup.getAsBoolean() && intakeSubsystem.currPosition == Constants.Position.AMP) {
-            intakeSubsystem.setSpeed(0.525, false);
+            intakeSubsystem.setSpeed(0.75, false);
             return;
         }
         if (shootSup.getAsBoolean() && intakeSubsystem.currPosition == Constants.Position.INTAKE) {

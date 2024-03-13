@@ -85,7 +85,7 @@ public final class Constants {
             public static final double rotationConversionFactor = 1/GearRatio;
 
             public static final double Intake = 211.374d;
-            public static final double Amp = 23.809415817260742 * degreeConversionFactor;
+            public static final double Amp = 24 * degreeConversionFactor;
             public static final double Shoot = 0;
 
             public static final double kP = 0.00022;
