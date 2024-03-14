@@ -162,7 +162,10 @@ public class RobotContainer
         autoChooser.addOption("MidToCentTop", drivebase.getPPAutoCommand("MidToCentTop", true));
         autoChooser.addOption("TopToCentTop", drivebase.getPPAutoCommand("TopToCentTop", true));
         autoChooser.addOption("2Note", drivebase.getPPAutoCommand("2NoteMid", true));
-        autoChooser.addOption("3NoteMid", drivebase.getPPAutoCommand("3NoteMid", true));
+        autoChooser.addOption("3NoteMid.Note1", drivebase.getPPAutoCommand("3NoteMid.Note1", true));
+        autoChooser.addOption("3NoteMid.Note3", drivebase.getPPAutoCommand("3NoteMid.Note3", true));
+        autoChooser.addOption("4Note", drivebase.getPPAutoCommand("4Note", true));
+
 
 
         SmartDashboard.putData(autoChooser);
@@ -181,6 +184,7 @@ public class RobotContainer
         NamedCommands.registerCommand("intake", new InstantCommand(() -> intakeSubsystem.setSpeed(Position.INTAKE.getSpeed())));
         NamedCommands.registerCommand("stopIntaking", new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
         NamedCommands.registerCommand("intakeIn", new AutoIntake(Position.SHOOT));
+
 
     }
 
