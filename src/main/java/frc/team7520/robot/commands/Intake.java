@@ -57,6 +57,10 @@ public class Intake extends Command {
             intakeSubsystem.setSpeed(-0.35, false);
             return;
         }
+        if(reverseSup.getAsBoolean()) {
+            intakeSubsystem.setSpeed(-0.35);
+            return;
+        }
         if (!intakeSubsystem.AutoMode)
             intakeSubsystem.stop();
     }
