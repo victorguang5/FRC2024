@@ -103,6 +103,88 @@ public class RobotContainer
         SmartDashboard.putNumber("Swerve Base:", Constants.Drivebase.SWERVE_BASE_NUMBER);
                 // Configure the trigger bindings
 
+        // Configures all commands from RoutePlanner.java
+        
+
+        // Left joystick is the angle of the robot
+        AbsoluteDrive closedAbsoluteDrive = new AbsoluteDrive(drivebase,
+                // Applies deadbands and inverts controls because joysticks
+                // are back-right positive while robot
+                // controls are front-left positive
+                () -> MathUtil.applyDeadband(driverController.getLeftY(),
+                        OperatorConstants.LEFT_Y_DEADBAND),
+                () -> MathUtil.applyDeadband(driverController.getLeftX(),
+                        OperatorConstants.LEFT_X_DEADBAND),
+                () -> driverController.getRightX(),
+                () -> driverController.getRightY(),
+                driverController::getRightBumper,
+                driverController::getLeftBumper
+        );
+
+        Shooter shooter = new Shooter(shooterSubsystem,
+                operatorController::getLeftTriggerAxis,
+                operatorController::getLeftBumper
+        );
+
+        
+        Climber climber = new Climber(climberSubsystem,
+                operatorController::getLeftStickButton,
+                operatorController::getRightStickButton,
+                operatorController::getStartButton,
+                operatorController::getRightY,
+                operatorController::getLeftY,
+                operatorController::getBackButton
+        );
+        // Intake intake = new Intake(intakeSubsystem,
+        //         operatorController::getRightBumper,
+        //         operatorController::getYButton,
+        //         operatorController::getAButton,
+        //         operatorController::getBButton,
+        //         operatorController::getXButton,
+        //         intakeSubsystem::getSwitchVal
+        // );
+
+        // Old drive method
+        // like in video games
+        // Easier to learn, harder to control
+        // Not tested not used
+        TeleopDrive simClosedFieldRel = new TeleopDrive(drivebase,
+                () -> MathUtil.applyDeadband(driverController.getLeftY(),
+                        OperatorConstants.LEFT_Y_DEADBAND),
+                () -> MathUtil.applyDeadband(driverController.getLeftX(),
+                        OperatorConstants.LEFT_X_DEADBAND),
+                () -> driverController.getRawAxis(2), () -> true);
+
+        drivebase.setDefaultCommand(closedAbsoluteDrive);
+        shooterSubsystem.setDefaultCommand(shooter);
+        intakeSubsystem.setDefaultCommand(intake);
+        climberSubsystem.setDefaultCommand(climber);
+        LEDSubsystem.setDefaultCommand(LEDSubsystem.idle());
+
+        // Display Chooser 
+        autoChooser = AutoBuilder.buildAutoChooser();
+        SmartDashboard.putData("Auto Mode", autoChooser);
+        SmartDashboard.putData("Test Route", pathChooser); 
+        ConfigureRegisterAllCommands();
+        myRoute.ConfigureAutoPathProfile();
+        myRoute.ConfigureManualPathProfile();
+        
+        configureBindings();
+    }
+
+    /**
+     * Use this method to define named commands for use in {@link PathPlannerAuto}
+     *
+     */
+    private void ConfigureRegisterAllCommands()
+    {
+
+        // Currently just prints out "FindingGamepiece", Add drive to gamepiece using camera in the future
+        NamedCommands.registerCommand(
+            "FindGamepiece",
+            new InstantCommand(()->{
+                        System.out.println("FindingGamepiece");
+                }));
 
         NamedCommands.registerCommand(
                 "MyTestCommand", 
@@ -227,81 +309,8 @@ public class RobotContainer
                 new InstantCommand(()->{
                         intakeSubsystem.setAutoSpeed(0.525, false);
                 }));
-
-        // Left joystick is the angle of the robot
-        AbsoluteDrive closedAbsoluteDrive = new AbsoluteDrive(drivebase,
-                // Applies deadbands and inverts controls because joysticks
-                // are back-right positive while robot
-                // controls are front-left positive
-                () -> MathUtil.applyDeadband(driverController.getLeftY(),
-                        OperatorConstants.LEFT_Y_DEADBAND),
-                () -> MathUtil.applyDeadband(driverController.getLeftX(),
-                        OperatorConstants.LEFT_X_DEADBAND),
-                () -> driverController.getRightX(),
-                () -> driverController.getRightY(),
-                driverController::getRightBumper,
-                driverController::getLeftBumper
-        );
-
-        Shooter shooter = new Shooter(shooterSubsystem,
-                operatorController::getLeftTriggerAxis,
-                operatorController::getLeftBumper
-        );
-
-        
-        Climber climber = new Climber(climberSubsystem,
-                operatorController::getLeftStickButton,
-                operatorController::getRightStickButton,
-                operatorController::getStartButton,
-                operatorController::getRightY,
-                operatorController::getLeftY,
-                operatorController::getBackButton
-        );
-        // Intake intake = new Intake(intakeSubsystem,
-        //         operatorController::getRightBumper,
-        //         operatorController::getYButton,
-        //         operatorController::getAButton,
-        //         operatorController::getBButton,
-        //         operatorController::getXButton,
-        //         intakeSubsystem::getSwitchVal
-        // );
-
-        // Old drive method
-        // like in video games
-        // Easier to learn, harder to control
-        // Not tested not used
-        TeleopDrive simClosedFieldRel = new TeleopDrive(drivebase,
-                () -> MathUtil.applyDeadband(driverController.getLeftY(),
-                        OperatorConstants.LEFT_Y_DEADBAND),
-                () -> MathUtil.applyDeadband(driverController.getLeftX(),
-                        OperatorConstants.LEFT_X_DEADBAND),
-                () -> driverController.getRawAxis(2), () -> true);
-
-        drivebase.setDefaultCommand(closedAbsoluteDrive);
-        shooterSubsystem.setDefaultCommand(shooter);
-        intakeSubsystem.setDefaultCommand(intake);
-        climberSubsystem.setDefaultCommand(climber);
-        LEDSubsystem.setDefaultCommand(LEDSubsystem.idle());
-
-        // Display Chooser 
-        autoChooser = AutoBuilder.buildAutoChooser();
-        SmartDashboard.putData("Auto Mode", autoChooser);
-        SmartDashboard.putData("Test Route", pathChooser); 
-        myRoute.ConfigureAutoPathProfile();
-        myRoute.ConfigureManualPathProfile();
-        
-        configureBindings();
     }
-
-    /**
-     * Use this method to define named commands for use in {@link PathPlannerAuto}
-     *
-     */
-    private void registerNamedCommands()
-    {
-        // Example
-        NamedCommands.registerCommand("Shoot", new WaitCommand(1));
-    }
+    
 
     /**
      * Use this method to define your trigger->command mappings. Triggers can be created via the
