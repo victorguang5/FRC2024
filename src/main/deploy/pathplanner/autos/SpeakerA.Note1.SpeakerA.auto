@@ -91,25 +91,6 @@
           "data": {
             "name": "shoot"
           }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "stopShoot"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "SpeakerA.Note4"
-                }
-              }
-            ]
-          }
         }
       ]
     }
