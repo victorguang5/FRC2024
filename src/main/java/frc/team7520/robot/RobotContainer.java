@@ -169,7 +169,8 @@ public class RobotContainer
         // 1note shoot and Speaker Source side to note8 parking
         autoChooser.addOption("SpeakerS.Note8", drivebase.getPPAutoCommand("SpeakerS.Note8", true));
 
-
+        // 2note Ampside and close to center parking
+        autoChooser.addOption("SpeakerA.Note1.SpeakerA.Note4", drivebase.getPPAutoCommand("SpeakerA.Note1.SpeakerA.Note4", true));
 
         SmartDashboard.putData(autoChooser);
     }
