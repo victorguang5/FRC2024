@@ -165,7 +165,7 @@ public class RobotContainer
         autoChooser.addOption("3NoteMid.Note1", drivebase.getPPAutoCommand("3NoteMid.Note1", true));
         autoChooser.addOption("3NoteMid.Note3", drivebase.getPPAutoCommand("3NoteMid.Note3", true));
         autoChooser.addOption("4Note", drivebase.getPPAutoCommand("4Note", true));
-        autoChooser.addOption("2NoteSpeakerS.Note3", drivebase.getPPAutoCommand("2NoteSpeakerS.Note3", true));
+        autoChooser.addOption("2NoteSpeakerS.Note3.SpeakerS.Note8", drivebase.getPPAutoCommand("2NoteSpeakerS.Note3", true));
 
         // 1note shoot and Speaker Source side to note8 parking
         autoChooser.addOption("SpeakerS.Note8", drivebase.getPPAutoCommand("SpeakerS.Note8", true));
