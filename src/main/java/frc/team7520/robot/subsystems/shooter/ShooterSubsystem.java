@@ -1,6 +1,7 @@
 package frc.team7520.robot.subsystems.shooter;
 
 
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
@@ -15,8 +16,8 @@ public class ShooterSubsystem extends SubsystemBase {
     // constructor must appear before the "INSTANCE" variable so that they are initialized
     // before the constructor is called when the "INSTANCE" variable initializes.
 
-    private CANSparkMax leftShooterMotor;
-    private CANSparkMax rightShooterMotor;
+    private TalonFX leftShooterMotor;
+    private TalonFX rightShooterMotor;
 
     private SparkPIDController leftShooterPID;
     private SparkPIDController rightShooterPID;
@@ -75,29 +76,33 @@ public class ShooterSubsystem extends SubsystemBase {
     leftShooterMotor.setInverted(false);
     rightShooterMotor.setInverted(true);*/
 
-        leftShooterMotor = new CANSparkMax(Constants.ShooterConstants.shooterLeftID, CANSparkMax.MotorType.kBrushless);
-        rightShooterMotor = new CANSparkMax(Constants.ShooterConstants.shooterRightID, CANSparkMax.MotorType.kBrushless);
+//        leftShooterMotor = new CANSparkMax(Constants.ShooterConstants.shooterLeftID, CANSparkMax.MotorType.kBrushless);
+//        rightShooterMotor = new CANSparkMax(Constants.ShooterConstants.shooterRightID, CANSparkMax.MotorType.kBrushless);
+//
+//        leftShooterMotor.restoreFactoryDefaults();
+//        rightShooterMotor.restoreFactoryDefaults();
+//
+//        leftShooterPID = leftShooterMotor.getPIDController();
+//        leftShooterPID.setP(Constants.ShooterConstants.kP);
+//        leftShooterPID.setI(Constants.ShooterConstants.kI);
+//        leftShooterPID.setD(Constants.ShooterConstants.kD);
+//        leftShooterPID.setFF(Constants.ShooterConstants.kFF);
+//
+//        rightShooterPID = rightShooterMotor.getPIDController();
+//        rightShooterPID.setP(Constants.ShooterConstants.kP);
+//        rightShooterPID.setI(Constants.ShooterConstants.kI);
+//        rightShooterPID.setD(Constants.ShooterConstants.kD);
+//        rightShooterPID.setFF(Constants.ShooterConstants.kFF);
+//
+//        leftShooterEncoder = leftShooterMotor.getEncoder();
+//        rightShooterEncoder = rightShooterMotor.getEncoder();
+//
+//        leftShooterMotor.setIdleMode(CANSparkMax.IdleMode.kCoast);
+//        rightShooterMotor.setIdleMode(CANSparkMax.IdleMode.kCoast);
 
-        leftShooterMotor.restoreFactoryDefaults();
-        rightShooterMotor.restoreFactoryDefaults();
+        leftShooterMotor = new TalonFX(Constants.ShooterConstants.shooterLeftID);
+        rightShooterMotor = new TalonFX(Constants.ShooterConstants.shooterRightID);
 
-        leftShooterPID = leftShooterMotor.getPIDController();
-        leftShooterPID.setP(Constants.ShooterConstants.kP);
-        leftShooterPID.setI(Constants.ShooterConstants.kI);
-        leftShooterPID.setD(Constants.ShooterConstants.kD);
-        leftShooterPID.setFF(Constants.ShooterConstants.kFF);
-
-        rightShooterPID = rightShooterMotor.getPIDController();
-        rightShooterPID.setP(Constants.ShooterConstants.kP);
-        rightShooterPID.setI(Constants.ShooterConstants.kI);
-        rightShooterPID.setD(Constants.ShooterConstants.kD);
-        rightShooterPID.setFF(Constants.ShooterConstants.kFF);
-
-        leftShooterEncoder = leftShooterMotor.getEncoder();
-        rightShooterEncoder = rightShooterMotor.getEncoder();
-
-        leftShooterMotor.setIdleMode(CANSparkMax.IdleMode.kCoast);
-        rightShooterMotor.setIdleMode(CANSparkMax.IdleMode.kCoast);
 
         leftShooterMotor.setInverted(false);
         rightShooterMotor.setInverted(true);
