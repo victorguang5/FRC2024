@@ -126,8 +126,13 @@ public class Climber extends Command {
         }
 
         if (this.state == State.NOTHING) {
-            subsystem.setRightSpeed(bRightManual.getAsDouble());
-            subsystem.setLeftSpeed(bLeftManual.getAsDouble());
+            double leftSpeed = bLeftManual.getAsDouble();
+            double rightSpeed= bRightManual.getAsDouble();
+            leftSpeed = Math.abs(leftSpeed) > 0.2 ? leftSpeed : 0;
+            rightSpeed = Math.abs(rightSpeed) > 0.2 ? -rightSpeed : 0;
+            subsystem.setLeftSpeed(leftSpeed);
+            subsystem.setRightSpeed(rightSpeed);
+            
         }
     }
 
