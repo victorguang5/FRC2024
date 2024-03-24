@@ -66,7 +66,7 @@ public final class Constants {
         public enum Position {
             SHOOT(new Rotation2d(0), 1),
             INTAKE(new Rotation2d(Units.degreesToRadians(212.152317734808d)), -0.3),
-            AMP(new Rotation2d(Units.degreesToRadians(100)), 1);
+            AMP(new Rotation2d(Units.degreesToRadians(83.5138969421)), 0.495);
 
             private final Rotation2d position;
             private final double speed;

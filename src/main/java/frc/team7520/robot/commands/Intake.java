@@ -46,16 +46,16 @@ public class Intake extends Command {
 
     public void handleWheels() {
         if (shootSup.getAsBoolean() && currPosition == Constants.IntakeConstants.Position.SHOOT) {
-            intakeSubsystem.setSpeed(0.35, false);
+            intakeSubsystem.setSpeed(Constants.IntakeConstants.Position.SHOOT.getSpeed(), false);
             return;
         }
         if (shootSup.getAsBoolean() && currPosition == Constants.IntakeConstants.Position.AMP) {
-            intakeSubsystem.setSpeed(0.525, false);
+            intakeSubsystem.setSpeed(Constants.IntakeConstants.Position.AMP.getSpeed(), false);
             return;
         }
         if (shootSup.getAsBoolean() && currPosition == Constants.IntakeConstants.Position.INTAKE) {
             if (switchSup.getAsBoolean()) {
-                intakeSubsystem.setSpeed(-0.35, false);
+                intakeSubsystem.setSpeed(Constants.IntakeConstants.Position.INTAKE.getSpeed(), false);
             }
             else {
                 intakeSubsystem.setSpeed(0, false);
