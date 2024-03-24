@@ -175,6 +175,9 @@ public class RobotContainer
         // 2note Ampside with move to center
         autoChooser.addOption("SpeakerA.Note1.SpeakerA.Note4", drivebase.getPPAutoCommand("SpeakerA.Note1.SpeakerA.Note4", true));
 
+        // 2note Sourceside to note8 to Speaker
+        autoChooser.addOption("SpeakerS.Note8.SpeakerS", drivebase.getPPAutoCommand("SpeakerS.Note8.Speaker8", true));
+
         SmartDashboard.putData(autoChooser);
     }
 
