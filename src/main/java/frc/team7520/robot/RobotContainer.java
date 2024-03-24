@@ -174,8 +174,7 @@ public class RobotContainer
         autoChooser.addOption("SpeakerA.Note1.SpeakerA", drivebase.getPPAutoCommand("SpeakerA.Note1.SpeakerA", true));
         // 2note Ampside with move to center
         autoChooser.addOption("SpeakerA.Note1.SpeakerA.Note4", drivebase.getPPAutoCommand("SpeakerA.Note1.SpeakerA.Note4", true));
-
-        // 4note auto with same speed but more direct paths
+        autoChooser.addOption("SpeakerS.Note8.SpeakerS", drivebase.getPPAutoCommand("SpeakerS.Note8.Speaker8", true));
         autoChooser.addOption("4Note=SpeakerC.Note2.SpeakerC.Note1.SpeakerC.Note3.SpeakerC", drivebase.getPPAutoCommand("4Note=SpeakerC.Note2.SpeakerC.Note1.SpeakerC.Note3.SpeakerC", true));
 
         SmartDashboard.putData(autoChooser);
