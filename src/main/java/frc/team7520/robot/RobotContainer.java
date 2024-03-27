@@ -176,7 +176,7 @@ public class RobotContainer
 
         // 4note auto with same speed but more direct paths
         autoChooser.addOption("4Note=SpeakerC.Note2.SpeakerC.Note1.SpeakerC.Note3.SpeakerC", drivebase.getPPAutoCommand("4Note=SpeakerC.Note2.SpeakerC.Note1.SpeakerC.Note3.SpeakerC", true));
-
+        autoChooser.addOption("4NoteFastCurvedPath", drivebase.getPPAutoCommand("4NoteFastCurvedPath", true));
         SmartDashboard.putData(autoChooser);
     }
 
