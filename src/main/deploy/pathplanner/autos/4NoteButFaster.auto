@@ -99,7 +99,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Note1.SpeakerC"
+                  "pathName": "Note3.SpeakerC."
                 }
               },
               {
@@ -124,7 +124,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "SpeakerC.Note1"
+                  "pathName": "SpeakerC.Note3."
                 }
               },
               {
@@ -168,7 +168,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Note3.SpeakerC."
+                  "pathName": "Note1.SpeakerC"
                 }
               },
               {
@@ -193,7 +193,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "SpeakerC.Note3."
+                  "pathName": "SpeakerC.Note1"
                 }
               },
               {

@@ -18,32 +18,25 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "intakeOut"
+          }
+        },
+        {
           "type": "parallel",
           "data": {
             "commands": [
               {
                 "type": "named",
                 "data": {
-                  "name": "intakeOut"
+                  "name": "intake"
                 }
               },
               {
                 "type": "path",
                 "data": {
                   "pathName": "SpeakerS to Note 3"
-                }
-              },
-              {
-                "type": "sequential",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "intake"
-                      }
-                    }
-                  ]
                 }
               }
             ]
