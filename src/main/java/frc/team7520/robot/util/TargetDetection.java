@@ -326,22 +326,7 @@ public class TargetDetection {
             }
         }
 		
-		// maxConfString = "\"{'x': 636.5, 'y': 361, 'w': 184, 'h': 41, 'conf': 0.68359375}\"";
-        // maxConfString = "\"{'x': 938.5, 'y': 277, 'w': 184, 'h': 41, 'conf': 0.68359375}\"";
-        // maxConfString = "\"{'x': 827.5, 'y': 148, 'w': 184, 'h': 41, 'conf': 0.68359375}\"";
-        // maxConfString = "\"{'x': 872, 'y': 246, 'w': 184, 'h': 41, 'conf': 0.68359375}\"";
-        // maxConfString = "\"{'x': 994.5, 'y': 435.5, 'w': 184, 'h': 41, 'conf': 0.68359375}\"";
-        // maxConfString = "\"{'x': 499, 'y': 120, 'w': 184, 'h': 41, 'conf': 0.68359375}\"";
-        // maxConfString = "\"{'x': 297, 'y': 173, 'w': 184, 'h': 41, 'conf': 0.68359375}\"";
-        // maxConfString = "\"{'x': 361.5, 'y': 331.5, 'w': 184, 'h': 41, 'conf': 0.68359375}\"";
-        // maxConfString = "\"{'x': 849, 'y': 249.5, 'w': 184, 'h': 41, 'conf': 0.68359375}\"";
-        //maxConfString = "\"{'x': 899.5, 'y': 250.5, 'w': 184, 'h': 41, 'conf': 0.68359375}\"";
-        // maxConfString = "\"{'x': 477.5, 'y': 213.5, 'w': 184, 'h': 41, 'conf': 0.68359375}\"";  1.63, 0.36
-        // maxConfString = "\"{'x': 267, 'y': 205, 'w': 184, 'h': 41, 'conf': 0.68359375}\""; // 1.55, -0.54
-        // maxConfString = "\"{'x': 882.5, 'y': 215, 'w': 184, 'h': 41, 'conf': 0.68359375}\"";
-        // maxConfString = "\"{'x': 247, 'y': 217, 'w': 184, 'h': 41, 'conf': 0.68359375}\""; //1.395, 0.621
-        System.out.printf("maxConfString: %s\n", maxConfString);        
-
+        System.out.printf("maxConfString: %s\n", maxConfString);
         if(maxConfString.contains("None"))  {
             System.out.printf("maxConf String include None: %s\n", maxConfString);
             return para;
