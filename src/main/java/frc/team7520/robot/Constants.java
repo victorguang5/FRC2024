@@ -147,4 +147,28 @@ public final class Constants {
         public static final double kFF = 0.0006;
 
     }
+    // Camera constans, related to AprilTag and Game piece detection
+    public static final class CameraConstants {
+        public static final int CAMERA_PITCH_ANGLE = 1;
+        public static final double SPEAKER_SUBWOOFER_WIDTH = 0.92;
+        public static final double AMP_WIDTH = 0;
+        public static final double SPEAKER_APRIL_TAG_WIDTH = 0.43;
+        public static final double APRILTAG_WIDTH = 0.135; //  0.27 / 2
+        public static final double SRC_WIDTH = 0.5;
+        
+        public static final double ROLL = -Math.PI / 2;
+        public static final double PITCH = 0.0;
+        public static final double YAW = 0.0;
+      
+        public static final String CAMERA_NAME = "CSI";
+        public static final double LARGEST_DISTANCE = 0.1;
+
+        
+        public static final double cameraHeight = 0.465; //0.31 original
+        public static final double targetHeight = 0.05;
+        public static final double cameraPitch = -0.574; // 30 degree
+
+        public static final double goalDistance = 0.0;
+    }
+
 }

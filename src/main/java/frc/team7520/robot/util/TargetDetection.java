@@ -34,6 +34,8 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringSubscriber;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.team7520.robot.Constants;
+
 //import frc.team7520.robot.Constants;
 import java.io.IOException;
 
