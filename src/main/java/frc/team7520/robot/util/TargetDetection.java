@@ -110,17 +110,17 @@ public class TargetDetection {
             */
             // Horizontal FOV
             double fov_horizontal_degrees = 82.149220;
-            double pixels_per_degree_horizontal = (image_width / fov_horizontal_degrees);
+            pixels_per_degree_horizontal = (image_width / fov_horizontal_degrees);
             
             // Vertical FOV
             double fov_vertical_degrees = 52.233845;        
-            double pixels_per_degree_vertical = (image_height / fov_vertical_degrees);
+            pixels_per_degree_vertical = (image_height / fov_vertical_degrees);
 
             // to know installation angle, need to measure distance with camera,
             // laptop camera: 1280 X 720, vertical move to see the bottom, the distance to camera 
             double measure_bottom_distance = 0.32;    
             double install_angle = Math.atan(measure_bottom_distance / cameraHeightMeters);    
-            double cameraPitchRadians = -(1.5707963 - install_angle -  Math.toRadians(fov_vertical_degrees) + Math.toRadians(fov_vertical_degrees/2));
+            cameraPitchRadians = -(1.5707963 - install_angle -  Math.toRadians(fov_vertical_degrees) + Math.toRadians(fov_vertical_degrees/2));
         } else {
             camera = new PhotonCamera(camera_name);
             if(camera.isConnected()) {
@@ -325,7 +325,8 @@ public class TargetDetection {
                 return para;
             }
         }
-		
+
+        //maxConfString = "\"{'x': 247, 'y': 217, 'w': 184, 'h': 41, 'conf': 0.68359375}\""; 		
         System.out.printf("maxConfString: %s\n", maxConfString);
         if(maxConfString.contains("None"))  {
             System.out.printf("maxConf String include None: %s\n", maxConfString);
