@@ -55,8 +55,8 @@ public class TargetDetection {
     double image_height = 720.0;  // pixels    
  
     double game_piece_radius = 0.15;
-    double robot_half_width = 0.36;
-    double intake_offset = 0.4;
+    double robot_half_width = 0.27;
+    double intake_offset = 0;//0.4;
 
     double targetHeightMeters = 0;
     double cameraHeightMeters = 0.65;
@@ -118,7 +118,7 @@ public class TargetDetection {
 
             // to know installation angle, need to measure distance with camera,
             // laptop camera: 1280 X 720, vertical move to see the bottom, the distance to camera 
-            double measure_bottom_distance = 0.32;    
+            double measure_bottom_distance = 0.39;    
             double install_angle = Math.atan(measure_bottom_distance / cameraHeightMeters);    
             cameraPitchRadians = -(1.5707963 - install_angle -  Math.toRadians(fov_vertical_degrees) + Math.toRadians(fov_vertical_degrees/2));
         } else {
@@ -353,9 +353,10 @@ public class TargetDetection {
                 double move_y = Math.sqrt(cameraHeightMeters * cameraHeightMeters + 
                                         move_x * move_x) * Math.tan(Math.toRadians(yaw));
                                         
+                move_y = -move_y;
                 System.out.printf("move_X: %f, move_Y:%f\n", move_x, move_y);
                 double x_distance = (move_x - game_piece_radius - intake_offset);
-                double y_distance = (move_y - game_piece_radius - robot_half_width);
+                double y_distance = (move_y  - robot_half_width);
                 
                 if(x_distance < 0) x_distance = 0;       
                 

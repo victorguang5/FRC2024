@@ -9,6 +9,10 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -33,8 +37,14 @@ import frc.team7520.robot.subsystems.LED;
 import frc.team7520.robot.subsystems.intake.IntakeSubsystem;
 import frc.team7520.robot.subsystems.shooter.ShooterSubsystem;
 import frc.team7520.robot.subsystems.swerve.SwerveSubsystem;
+import frc.team7520.robot.util.PathPlannerHelper;
+import frc.team7520.robot.util.RobotMoveTargetParameters;
+import frc.team7520.robot.util.TargetDetection;
+import swervelib.SwerveController;
+import swervelib.math.SwerveMath;
 
 import java.io.File;
+import java.util.List;
 
 import static frc.team7520.robot.subsystems.LED.candle;
 
@@ -174,7 +184,7 @@ public class RobotContainer
         autoChooser.addOption("SpeakerA.Note1.SpeakerA", drivebase.getPPAutoCommand("SpeakerA.Note1.SpeakerA", true));
         // 2note Ampside with move to center
         autoChooser.addOption("SpeakerA.Note1.SpeakerA.Note4", drivebase.getPPAutoCommand("SpeakerA.Note1.SpeakerA.Note4", true));
-        autoChooser.addOption("SpeakerS.Note8.SpeakerS", drivebase.getPPAutoCommand("SpeakerS.Note8.Speaker8", true));
+        //autoChooser.addOption("SpeakerS.Note8.SpeakerS", drivebase.getPPAutoCommand("SpeakerS.Note8.Speaker8", true));
         autoChooser.addOption("4Note=SpeakerC.Note2.SpeakerC.Note1.SpeakerC.Note3.SpeakerC", drivebase.getPPAutoCommand("4Note=SpeakerC.Note2.SpeakerC.Note1.SpeakerC.Note3.SpeakerC", true));
 
         SmartDashboard.putData(autoChooser);
@@ -213,7 +223,13 @@ public class RobotContainer
     {
         // Zero gyro
         new JoystickButton(driverController, XboxController.Button.kA.value)
-                .onTrue(new InstantCommand(drivebase::zeroGyro));
+                .onTrue(
+                        //new InstantCommand(drivebase::zeroGyro)
+                        new InstantCommand(()->{
+                                drivebase.resetOdometry(new Pose2d());
+                                drivebase.zeroGyro();
+                        })
+                        );
         // X/Lock wheels
         new JoystickButton(driverController, XboxController.Button.kX.value)
                 .whileTrue(new RepeatCommand(new InstantCommand(drivebase::lock)));
@@ -231,6 +247,74 @@ public class RobotContainer
         new Trigger(intakeSubsystem::getSwitchVal)
                 .whileFalse(new RepeatCommand(LEDSubsystem.noteIn()))
                 .onTrue(LEDSubsystem.idle());
+
+        new JoystickButton(driverController, XboxController.Button.kB.value)
+                .onTrue(new InstantCommand(
+                        ()-> {
+                                var targetDetection = new TargetDetection("", TargetDetection.PipeLineType.COLORED_SHAPE);
+                                RobotMoveTargetParameters params = targetDetection.GetRobotMoveforGamePieceviaEdgeTpu();
+                                boolean bFound = params.IsValid;
+                                SmartDashboard.putBoolean("Found Gamepiece", bFound);
+                                if (bFound)
+                                {
+                                        Translation2d trans = params.move;
+                                        //trans = trans.times(-1);
+                                        Pose2d curPose2d = drivebase.getPose();
+                                        Pose2d endPose = ConvertPose2d(trans, curPose2d);
+                                        // Translation2d endTrans = new Translation2d(
+                                        //         curPose2d.getX() + trans.getX(),
+                                        //         curPose2d.getY() + trans.getY()
+                                        // );
+                                        //Pose2d endPose = new Pose2d(endTrans, Rotation2d.fromDegrees(0));
+                                        //Pose2d endPose_tmp = new Pose2d(trans, Rotation2d.fromDegrees(0));
+                                        //Pose2d endPose = endPose_tmp.relativeTo(curPose2d);
+                                        //endPose = endPose.times(-1);
+
+                                        SmartDashboard.putNumber("move X: ", trans.getX());
+                                        SmartDashboard.putNumber("move Y: ", trans.getY());
+                                        
+                                        SmartDashboard.putNumber("curPose X: ", curPose2d.getX());
+                                        SmartDashboard.putNumber("curPose Y: ", curPose2d.getY());
+
+                                        SmartDashboard.putNumber("endPose X: ", endPose.getX());
+                                        SmartDashboard.putNumber("endPose Y: ", endPose.getY());
+
+                                        var cmd = PathPlannerHelper.goToPose(drivebase, endPose);
+
+                                        CommandScheduler.getInstance().schedule(cmd);                                        
+                                }
+                                else
+                                {
+                                        Pose2d curPose2d = drivebase.getPose();
+                                        Pose2d endPose2d = new Pose2d(
+                                                curPose2d.getTranslation(),
+                                                Rotation2d.fromDegrees(curPose2d.getRotation().getDegrees() + 30)
+                                        );
+
+
+
+
+for(int i=0; i<60; i++)
+{
+            var desiredSpeeds = drivebase.getTargetSpeeds(0, 0, drivebase.getHeading().minus(Rotation2d.fromDegrees(20)));
+
+
+
+
+        // Limit velocity to prevent tippy
+        Translation2d translation = SwerveController.getTranslation2d(desiredSpeeds);
+        translation = SwerveMath.limitVelocity(translation, drivebase.getFieldVelocity(), drivebase.getPose(),
+                Constants.LOOP_TIME, Constants.ROBOT_MASS, List.of(Constants.CHASSIS),
+                drivebase.getSwerveDriveConfiguration());
+        // Make the robot move
+        drivebase.drive(translation, desiredSpeeds.omegaRadiansPerSecond, true);
+}
+
+
+                                }
+                                
+                        }
+                ));
     }
 
     /**
@@ -247,5 +331,30 @@ public class RobotContainer
                 ),
                 new InstantCommand(() -> shooterSubsystem.setDefaultCommand(shooter))
         );
+    }
+
+    public static Translation2d rotateTranslation(Translation2d translation, Rotation2d rotation)
+    {
+        double cosTheta = Math.cos(rotation.getRadians());
+        double sinTheta = Math.sin(rotation.getRadians());
+        double x = translation.getX() * cosTheta - translation.getY() * sinTheta;
+        double y = translation.getX() * sinTheta + translation.getY() * cosTheta;
+        return new Translation2d(x, y);
+    }
+
+    public static Pose2d ConvertPose2d(Translation2d move, Pose2d curPose)
+    {
+        double theta = curPose.getRotation().getRadians();
+        Translation2d trans = rotateTranslation(move, Rotation2d.fromRadians(theta));
+
+        SmartDashboard.putNumber("mid X: ", trans.getX());
+        SmartDashboard.putNumber("mid Y: ", trans.getY());
+
+        Translation2d endTrans = new Translation2d(
+                trans.getX() + curPose.getX(),
+                curPose.getY() + trans.getY()
+        );
+        Pose2d endPose = new Pose2d(endTrans, curPose.getRotation());
+        return endPose;
     }
 }
