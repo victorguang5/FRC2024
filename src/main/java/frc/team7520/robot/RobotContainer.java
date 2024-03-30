@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.team7520.robot.auto.AutoIntake;
 import frc.team7520.robot.auto.AutoShoot;
+import frc.team7520.robot.auto.PickUpGPSequence;
 import frc.team7520.robot.auto.ShootSequence;
 import frc.team7520.robot.commands.AbsoluteDrive;
 import frc.team7520.robot.commands.Climber;
@@ -204,6 +205,7 @@ public class RobotContainer
         NamedCommands.registerCommand("stopIntaking", new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
         NamedCommands.registerCommand("intakeIn", new AutoIntake(Position.SHOOT));
         NamedCommands.registerCommand("stopShoot", new AutoShoot(0, false));
+        NamedCommands.registerCommand("pickupGP", new PickUpGPSequence(drivebase));
 
 
     }
@@ -249,72 +251,19 @@ public class RobotContainer
                 .onTrue(LEDSubsystem.idle());
 
         new JoystickButton(driverController, XboxController.Button.kB.value)
-                .onTrue(new InstantCommand(
-                        ()-> {
-                                var targetDetection = new TargetDetection("", TargetDetection.PipeLineType.COLORED_SHAPE);
-                                RobotMoveTargetParameters params = targetDetection.GetRobotMoveforGamePieceviaEdgeTpu();
-                                boolean bFound = params.IsValid;
-                                SmartDashboard.putBoolean("Found Gamepiece", bFound);
-                                if (bFound)
-                                {
-                                        Translation2d trans = params.move;
-                                        //trans = trans.times(-1);
-                                        Pose2d curPose2d = drivebase.getPose();
-                                        Pose2d endPose = ConvertPose2d(trans, curPose2d);
-                                        // Translation2d endTrans = new Translation2d(
-                                        //         curPose2d.getX() + trans.getX(),
-                                        //         curPose2d.getY() + trans.getY()
-                                        // );
-                                        //Pose2d endPose = new Pose2d(endTrans, Rotation2d.fromDegrees(0));
-                                        //Pose2d endPose_tmp = new Pose2d(trans, Rotation2d.fromDegrees(0));
-                                        //Pose2d endPose = endPose_tmp.relativeTo(curPose2d);
-                                        //endPose = endPose.times(-1);
+                .onTrue(
+                        new PickUpGPSequence(drivebase)
+                        //LookForGamePieceCmd()
+                        );
+    }
 
-                                        SmartDashboard.putNumber("move X: ", trans.getX());
-                                        SmartDashboard.putNumber("move Y: ", trans.getY());
-                                        
-                                        SmartDashboard.putNumber("curPose X: ", curPose2d.getX());
-                                        SmartDashboard.putNumber("curPose Y: ", curPose2d.getY());
-
-                                        SmartDashboard.putNumber("endPose X: ", endPose.getX());
-                                        SmartDashboard.putNumber("endPose Y: ", endPose.getY());
-
-                                        var cmd = PathPlannerHelper.goToPose(drivebase, endPose);
-
-                                        CommandScheduler.getInstance().schedule(cmd);                                        
-                                }
-                                else
-                                {
-                                        Pose2d curPose2d = drivebase.getPose();
-                                        Pose2d endPose2d = new Pose2d(
-                                                curPose2d.getTranslation(),
-                                                Rotation2d.fromDegrees(curPose2d.getRotation().getDegrees() + 30)
-                                        );
-
-
-
-
-for(int i=0; i<60; i++)
-{
-            var desiredSpeeds = drivebase.getTargetSpeeds(0, 0, drivebase.getHeading().minus(Rotation2d.fromDegrees(20)));
-
-
-
-
-        // Limit velocity to prevent tippy
-        Translation2d translation = SwerveController.getTranslation2d(desiredSpeeds);
-        translation = SwerveMath.limitVelocity(translation, drivebase.getFieldVelocity(), drivebase.getPose(),
-                Constants.LOOP_TIME, Constants.ROBOT_MASS, List.of(Constants.CHASSIS),
-                drivebase.getSwerveDriveConfiguration());
-        // Make the robot move
-        drivebase.drive(translation, desiredSpeeds.omegaRadiansPerSecond, true);
-}
-
-
-                                }
-                                
-                        }
-                ));
+    private Command LookForGamePieceCmd()
+    {
+        Command cmd = PathPlannerHelper.LookForGamepiece(drivebase);
+        if (cmd == null)
+                return new InstantCommand(()->{});
+        else
+                return cmd;
     }
 
     /**
@@ -331,30 +280,5 @@ for(int i=0; i<60; i++)
                 ),
                 new InstantCommand(() -> shooterSubsystem.setDefaultCommand(shooter))
         );
-    }
-
-    public static Translation2d rotateTranslation(Translation2d translation, Rotation2d rotation)
-    {
-        double cosTheta = Math.cos(rotation.getRadians());
-        double sinTheta = Math.sin(rotation.getRadians());
-        double x = translation.getX() * cosTheta - translation.getY() * sinTheta;
-        double y = translation.getX() * sinTheta + translation.getY() * cosTheta;
-        return new Translation2d(x, y);
-    }
-
-    public static Pose2d ConvertPose2d(Translation2d move, Pose2d curPose)
-    {
-        double theta = curPose.getRotation().getRadians();
-        Translation2d trans = rotateTranslation(move, Rotation2d.fromRadians(theta));
-
-        SmartDashboard.putNumber("mid X: ", trans.getX());
-        SmartDashboard.putNumber("mid Y: ", trans.getY());
-
-        Translation2d endTrans = new Translation2d(
-                trans.getX() + curPose.getX(),
-                curPose.getY() + trans.getY()
-        );
-        Pose2d endPose = new Pose2d(endTrans, curPose.getRotation());
-        return endPose;
     }
 }

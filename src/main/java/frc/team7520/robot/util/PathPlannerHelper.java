@@ -23,9 +23,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.team7520.robot.Constants;
 //import frc.robot.constants.AutoConstants;
 //import frc.robot.subsystems.swerve.SwerveBase;
 import frc.team7520.robot.subsystems.swerve.SwerveSubsystem;
+import swervelib.SwerveController;
+import swervelib.math.SwerveMath;
 
 public class PathPlannerHelper {
     static Pose2d lastPhotonPose2d;
@@ -283,5 +286,76 @@ public class PathPlannerHelper {
             curPose.getRotation()
         );
         goToPose(s_Swerve, endPose);
+    }
+
+    public static Translation2d rotateTranslation(Translation2d translation, Rotation2d rotation)
+    {
+        double cosTheta = Math.cos(rotation.getRadians());
+        double sinTheta = Math.sin(rotation.getRadians());
+        double x = translation.getX() * cosTheta - translation.getY() * sinTheta;
+        double y = translation.getX() * sinTheta + translation.getY() * cosTheta;
+        return new Translation2d(x, y);
+    }
+
+    public static Pose2d ConvertFieldPose2d(Translation2d targetTranslation, Pose2d curPose)
+    {
+        double theta = curPose.getRotation().getRadians();
+        Translation2d trans = rotateTranslation(targetTranslation, Rotation2d.fromRadians(theta));
+
+        SmartDashboard.putNumber("mid X: ", trans.getX());
+        SmartDashboard.putNumber("mid Y: ", trans.getY());
+
+        Translation2d endTrans = new Translation2d(
+                trans.getX() + curPose.getX(),
+                curPose.getY() + trans.getY()
+        );
+        Pose2d endPose = new Pose2d(endTrans, curPose.getRotation());
+        return endPose;
+    }
+
+    public static Command LookForGamepiece(SwerveSubsystem drivebase)
+    {
+        boolean bFound = false;
+        Command returnCmd = null;
+        var targetDetection = new TargetDetection("", TargetDetection.PipeLineType.COLORED_SHAPE);
+        RobotMoveTargetParameters params = targetDetection.GetRobotMoveforGamePieceviaEdgeTpu();        
+        bFound = params.IsValid;
+        while(!bFound)
+        {
+            for(int i=0; i<60; i++)
+            {
+                var desiredSpeeds = drivebase.getTargetSpeeds(0, 0, 
+                    drivebase.getHeading().minus(Rotation2d.fromDegrees(20)));
+        
+                // Limit velocity to prevent tippy
+                Translation2d translation = SwerveController.getTranslation2d(desiredSpeeds);
+                translation = SwerveMath.limitVelocity(translation, drivebase.getFieldVelocity(), drivebase.getPose(),
+                    Constants.LOOP_TIME, Constants.ROBOT_MASS, List.of(Constants.CHASSIS),
+                    drivebase.getSwerveDriveConfiguration());
+                // Make the robot move
+                drivebase.drive(translation, desiredSpeeds.omegaRadiansPerSecond, true);
+            }
+            params = targetDetection.GetRobotMoveforGamePieceviaEdgeTpu();        
+            bFound = params.IsValid;
+        }
+        if (bFound)
+        {
+            Translation2d trans = params.move;
+            Pose2d curPose2d = drivebase.getPose();
+            Pose2d endPose = ConvertFieldPose2d(trans, curPose2d);
+
+            SmartDashboard.putNumber("move X: ", trans.getX());
+            SmartDashboard.putNumber("move Y: ", trans.getY());
+            
+            SmartDashboard.putNumber("curPose X: ", curPose2d.getX());
+            SmartDashboard.putNumber("curPose Y: ", curPose2d.getY());
+
+            SmartDashboard.putNumber("endPose X: ", endPose.getX());
+            SmartDashboard.putNumber("endPose Y: ", endPose.getY());
+
+            returnCmd = PathPlannerHelper.goToPose(drivebase, endPose);
+        }
+
+        return returnCmd;
     }
 }

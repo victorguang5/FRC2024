@@ -54,12 +54,7 @@ public class Intake extends Command {
             return;
         }
         if (shootSup.getAsBoolean() && currPosition == Constants.IntakeConstants.Position.INTAKE) {
-            if (switchSup.getAsBoolean()) {
-                intakeSubsystem.setSpeed(Constants.IntakeConstants.Position.INTAKE.getSpeed(), false);
-            }
-            else {
-                intakeSubsystem.setSpeed(0, false);
-            }
+            intakeSubsystem.setSpeed(Constants.IntakeConstants.Position.INTAKE.getSpeed(), false);
             return;
         }
         if(reverseSup.getAsBoolean()) {
