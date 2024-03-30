@@ -3,6 +3,8 @@ package frc.team7520.robot.auto;
 
 import java.util.List;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -28,25 +30,35 @@ public class PickUpGPSequence extends SequentialCommandGroup {
         // TODO: Add your sequential commands in the super() call, e.g.
         //           super(new OpenClawCommand(), new MoveArmCommand());
         super(
-                new InstantCommand(() -> {
-
-                        LookForGamepiece(drivebase);
-                        if (bFound)
-                        {
-                                SequentialCommandGroup cmds = new SequentialCommandGroup(
-                                        new ParallelCommandGroup(
-                                                new AutoIntake(Constants.IntakeConstants.Position.INTAKE),
-                                                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.35))
-                                        ),
+                new InstantCommand(()->
+                        CommandScheduler.getInstance().schedule(RunAction(drivebase))
+                )
+        );
+    }
+    
+    public static Command RunAction(SwerveSubsystem drivebase)
+    {
+        var cmd = (LookForGamepiece(drivebase))? (
+                        new SequentialCommandGroup(
+                                new ParallelCommandGroup(  
+                                        new AutoIntake(Constants.IntakeConstants.Position.INTAKE),
+                                        new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.35))
+                                ),
                                         PathPlannerHelper.goToPose(drivebase, gPPose2d),
                                         new AutoIntake(Constants.IntakeConstants.Position.SHOOT),
                                         new WaitCommand(0.75),
-                                        new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(0))                                      
-                                );
-                                CommandScheduler.getInstance().schedule(cmds);
-                        }
-                })
-        );
+                                        new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(0)),
+                                        PathPlannerHelper.goToPose(drivebase,
+                                                new Pose2d(
+                                                        0.66, 4.41,
+                                                        Rotation2d.fromDegrees(-58.63)
+                                                )
+                                        ),
+                                        new ShootSequence()
+                                )
+                ) :
+                new InstantCommand(()->{});
+        return cmd;
     }
 
     public static boolean LookForGamepiece(SwerveSubsystem drivebase)

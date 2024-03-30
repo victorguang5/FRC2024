@@ -188,6 +188,9 @@ public class RobotContainer
         //autoChooser.addOption("SpeakerS.Note8.SpeakerS", drivebase.getPPAutoCommand("SpeakerS.Note8.Speaker8", true));
         autoChooser.addOption("4Note=SpeakerC.Note2.SpeakerC.Note1.SpeakerC.Note3.SpeakerC", drivebase.getPPAutoCommand("4Note=SpeakerC.Note2.SpeakerC.Note1.SpeakerC.Note3.SpeakerC", true));
 
+        autoChooser.addOption("AutoTest", drivebase.getPPAutoCommand("AutoTest", true));
+ 
+
         SmartDashboard.putData(autoChooser);
     }
 

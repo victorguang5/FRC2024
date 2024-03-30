@@ -90,15 +90,15 @@ public class AbsoluteDrive extends Command {
 
         Boolean speedCutoff = speedCutoffSup.getAsBoolean();
 
-        double vXspeed = vX.getAsDouble()/2 * (speedCutoffSup.getAsBoolean() ? 1 : 1);
-        double vYspeed = vY.getAsDouble()/2 * (speedCutoffSup.getAsBoolean() ? 1 : 1);
+        double vXspeed = vX.getAsDouble()/1.5 * (speedCutoffSup.getAsBoolean() ? 1 : 1);
+        double vYspeed = vY.getAsDouble()/1.5 * (speedCutoffSup.getAsBoolean() ? 1 : 1);
 
         ChassisSpeeds desiredSpeeds;
 
         if (CWSpin.getAsBoolean()) {
-            desiredSpeeds = swerve.getTargetSpeeds(vXspeed, vYspeed, swerve.getHeading().minus(Rotation2d.fromDegrees(20)));
+            desiredSpeeds = swerve.getTargetSpeeds(vXspeed, vYspeed, swerve.getHeading().minus(Rotation2d.fromDegrees(10)));
         } else if (CCWSpin.getAsBoolean()) {
-            desiredSpeeds = swerve.getTargetSpeeds(vXspeed, vYspeed, swerve.getHeading().plus(Rotation2d.fromDegrees(20)));
+            desiredSpeeds = swerve.getTargetSpeeds(vXspeed, vYspeed, swerve.getHeading().plus(Rotation2d.fromDegrees(10)));
         } else {
             // Get the desired chassis speeds based on a 2 joystick module.
             desiredSpeeds = swerve.getTargetSpeeds(vXspeed, vYspeed,
