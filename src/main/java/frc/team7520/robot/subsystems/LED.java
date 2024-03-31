@@ -1,6 +1,10 @@
 package frc.team7520.robot.subsystems;
 
 
+import java.lang.annotation.AnnotationTypeMismatchException;
+import java.util.function.BooleanSupplier;
+
+import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.led.*;
 import com.ctre.phoenix.led.ColorFlowAnimation.Direction;
 

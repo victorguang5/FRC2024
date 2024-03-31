@@ -9,6 +9,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -119,7 +120,6 @@ public class RobotContainer
         drivebase.setDefaultCommand(closedAbsoluteDrive);
         shooterSubsystem.setDefaultCommand(shooter);
         intakeSubsystem.setDefaultCommand(intake);
-        LEDSubsystem.setDefaultCommand(LEDSubsystem.idle());
     }
 
     /**
@@ -153,16 +153,16 @@ public class RobotContainer
         new Trigger(() -> intake.currPosition == Position.INTAKE)
                 .and(new JoystickButton(operatorController, XboxController.Button.kRightBumper.value))
                         .onTrue(new RepeatCommand(LEDSubsystem.intaking()))
-                                .onFalse(LEDSubsystem.clear());
+                                .onFalse(LEDSubsystem.idle());
         
         new Trigger(() -> intake.currPosition == Position.INTAKE)
                 .and(new JoystickButton(operatorController, XboxController.Button.kX.value))
                         .whileTrue(new RepeatCommand(LEDSubsystem.intaking()))
-                                .onFalse(LEDSubsystem.clear());
+                                .onFalse(LEDSubsystem.idle());
 
         new Trigger(intakeSubsystem::getSwitchVal)
                 .whileFalse(new RepeatCommand(LEDSubsystem.noteIn()))
-                        .onTrue(LEDSubsystem.clear());
+                        .onTrue(LEDSubsystem.idle());
     }
 
 
