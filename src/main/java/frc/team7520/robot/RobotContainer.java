@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -34,6 +35,7 @@ import frc.team7520.robot.commands.Intake;
 import frc.team7520.robot.commands.Shooter;
 import frc.team7520.robot.commands.TeleopDrive;
 import frc.team7520.robot.subsystems.climber.ClimberSubsystem;
+import frc.team7520.robot.subsystems.gamepiece.GamePieceSubsystem;
 import frc.team7520.robot.subsystems.LED;
 import frc.team7520.robot.subsystems.intake.IntakeSubsystem;
 import frc.team7520.robot.subsystems.shooter.ShooterSubsystem;
@@ -189,6 +191,7 @@ public class RobotContainer
         autoChooser.addOption("4Note=SpeakerC.Note2.SpeakerC.Note1.SpeakerC.Note3.SpeakerC", drivebase.getPPAutoCommand("4Note=SpeakerC.Note2.SpeakerC.Note1.SpeakerC.Note3.SpeakerC", true));
 
         autoChooser.addOption("AutoTest", drivebase.getPPAutoCommand("AutoTest", true));
+        autoChooser.addOption("AutoTest2", drivebase.getPPAutoCommand("AutoTest2", true));
  
 
         SmartDashboard.putData(autoChooser);
@@ -208,7 +211,48 @@ public class RobotContainer
         NamedCommands.registerCommand("stopIntaking", new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
         NamedCommands.registerCommand("intakeIn", new AutoIntake(Position.SHOOT));
         NamedCommands.registerCommand("stopShoot", new AutoShoot(0, false));
-        NamedCommands.registerCommand("pickupGP", new PickUpGPSequence(drivebase));
+        //NamedCommands.registerCommand("pickupGP", new PickUpGPSequence(drivebase));
+        NamedCommands.registerCommand("pickupGP", new InstantCommand(()->{
+                GamePieceSubsystem gamePieceSubsystem = GamePieceSubsystem.getInstance();
+                int iCount = 0;
+                Boolean isRed = isRedAlliance();
+                Double theta = isRed ? 20.0 : -20.0;
+
+                boolean bFound = gamePieceSubsystem.LookForGamepiece(drivebase);
+                while (!bFound || iCount < 10)
+                {
+                        for(int i=0; i<60; i++)
+                        {
+                                var desiredSpeeds = drivebase.getTargetSpeeds(0, 0, 
+                                drivebase.getHeading().minus(Rotation2d.fromDegrees(theta)));
+                        
+                                // Limit velocity to prevent tippy
+                                Translation2d translation = SwerveController.getTranslation2d(desiredSpeeds);
+                                translation = SwerveMath.limitVelocity(translation, drivebase.getFieldVelocity(), drivebase.getPose(),
+                                Constants.LOOP_TIME, Constants.ROBOT_MASS, List.of(Constants.CHASSIS),
+                                drivebase.getSwerveDriveConfiguration());
+                                // Make the robot move
+                                drivebase.drive(translation, desiredSpeeds.omegaRadiansPerSecond, true);
+                        }
+                        bFound = gamePieceSubsystem.LookForGamepiece(drivebase);
+                        if (bFound) iCount = 10;
+                }
+                if (bFound && (gamePieceSubsystem.GPPose != null))
+                {
+                    SmartDashboard.putBoolean("lookup Target FoundGP", gamePieceSubsystem.FoundGP);
+                    SmartDashboard.putNumber("lookup Target X", gamePieceSubsystem.GPPose.getX());
+                    SmartDashboard.putNumber("lookup Target Y", gamePieceSubsystem.GPPose.getY());
+                }
+
+        }));
+        NamedCommands.registerCommand("gotoGP", new InstantCommand(()->{
+                var cmd = PathPlannerHelper.GoToGPPose(
+                        drivebase, GamePieceSubsystem.getInstance()
+                );
+                CommandScheduler.getInstance().schedule(cmd);
+        }));
+
+        
 
 
     }
@@ -283,5 +327,13 @@ public class RobotContainer
                 ),
                 new InstantCommand(() -> shooterSubsystem.setDefaultCommand(shooter))
         );
+    }
+
+        private boolean isRedAlliance(){
+        var alliance = DriverStation.getAlliance();
+        if (alliance.isPresent()) {
+            return alliance.get() == DriverStation.Alliance.Red;
+        }
+        return false;
     }
 }

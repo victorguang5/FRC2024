@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.team7520.robot.Constants;
+import frc.team7520.robot.subsystems.gamepiece.GamePieceSubsystem;
 //import frc.robot.constants.AutoConstants;
 //import frc.robot.subsystems.swerve.SwerveBase;
 import frc.team7520.robot.subsystems.swerve.SwerveSubsystem;
@@ -193,7 +194,7 @@ public class PathPlannerHelper {
     
     public static Command goToPose(SwerveSubsystem s_Swerve, Pose2d endPose)
     {
-        if (endPose == null) return null;
+        if (endPose == null) return new InstantCommand();
 
         // go to the endPose directly
         double endAngle=0;
@@ -208,7 +209,7 @@ public class PathPlannerHelper {
         if (curPose.getDistance(lastP) < 0.05)
         {
             if (Math.abs(curAngle - lastAngle) < 1)
-                return null;
+                return new InstantCommand();
         }
 
         List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
@@ -255,7 +256,7 @@ public class PathPlannerHelper {
         if (curPose.getDistance(lastP) < 0.1)
         {
             if (Math.abs(curAngle - lastAngle) < 2)
-                return null;
+                return new InstantCommand();
         }
 
         // Create a path following command using AutoBuilder. This will also trigger event markers.
@@ -357,5 +358,18 @@ public class PathPlannerHelper {
         }
 
         return returnCmd;
+    }
+
+    public static Command GoToGPPose(SwerveSubsystem drivebase, GamePieceSubsystem gamePieceSubsystem)
+    {        
+        if (gamePieceSubsystem.FoundGP && (gamePieceSubsystem.GPPose != null))
+        {
+            SmartDashboard.putNumber("Goto Target X", gamePieceSubsystem.GPPose.getX());
+            SmartDashboard.putNumber("Goto arget Y", gamePieceSubsystem.GPPose.getY());
+
+            return goToPose(drivebase, gamePieceSubsystem.GPPose);
+        }
+        else
+            return new InstantCommand();
     }
 }
