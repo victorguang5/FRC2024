@@ -9,6 +9,8 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -252,5 +254,15 @@ public class RobotContainer
                 ),
                 new InstantCommand(() -> shooterSubsystem.setDefaultCommand(shooter))
         );
+    }
+
+    public void teleOpInit() {
+
+        shooterSubsystem.setDefaultCommand(shooter);
+
+        if(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
+            drivebase.setGyro(drivebase.getHeading().minus(Rotation2d.fromDegrees(180)));
+        }
+
     }
 }

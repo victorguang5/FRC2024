@@ -396,4 +396,9 @@ public class SwerveSubsystem extends SubsystemBase {
     public void addFakeVisionReading() {
         swerveDrive.addVisionMeasurement(new Pose2d(3, 3, Rotation2d.fromDegrees(65)), Timer.getFPGATimestamp());
     }
+
+    public void setGyro(Rotation2d yaw){
+        swerveDrive.setGyro(new Rotation3d(0, 0, yaw.getRadians()));
+    }
+
 }
