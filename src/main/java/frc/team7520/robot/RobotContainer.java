@@ -5,8 +5,11 @@
 
 package frc.team7520.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathPlannerPath;
+
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -31,6 +34,7 @@ import frc.team7520.robot.auto.PickUpGPSequence;
 import frc.team7520.robot.auto.ShootSequence;
 import frc.team7520.robot.commands.AbsoluteDrive;
 import frc.team7520.robot.commands.Climber;
+import frc.team7520.robot.commands.GamePieceLookUp;
 import frc.team7520.robot.commands.Intake;
 import frc.team7520.robot.commands.Shooter;
 import frc.team7520.robot.commands.TeleopDrive;
@@ -48,6 +52,8 @@ import swervelib.math.SwerveMath;
 
 import java.io.File;
 import java.util.List;
+
+import javax.management.InstanceAlreadyExistsException;
 
 import static frc.team7520.robot.subsystems.LED.candle;
 
@@ -192,6 +198,7 @@ public class RobotContainer
 
         autoChooser.addOption("AutoTest", drivebase.getPPAutoCommand("AutoTest", true));
         autoChooser.addOption("AutoTest2", drivebase.getPPAutoCommand("AutoTest2", true));
+        autoChooser.addOption("AutoTest3", drivebase.getPPAutoCommand("AutoTest3", true));
  
 
         SmartDashboard.putData(autoChooser);
@@ -211,7 +218,7 @@ public class RobotContainer
         NamedCommands.registerCommand("stopIntaking", new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
         NamedCommands.registerCommand("intakeIn", new AutoIntake(Position.SHOOT));
         NamedCommands.registerCommand("stopShoot", new AutoShoot(0, false));
-        //NamedCommands.registerCommand("pickupGP", new PickUpGPSequence(drivebase));
+        NamedCommands.registerCommand("pickupGP2", new PickUpGPSequence(drivebase));
         NamedCommands.registerCommand("pickupGP", new InstantCommand(()->{
                 GamePieceSubsystem gamePieceSubsystem = GamePieceSubsystem.getInstance();
                 int iCount = 0;
@@ -219,7 +226,7 @@ public class RobotContainer
                 Double theta = isRed ? 20.0 : -20.0;
 
                 boolean bFound = gamePieceSubsystem.LookForGamepiece(drivebase);
-                while (!bFound || iCount < 10)
+                while (!bFound)
                 {
                         for(int i=0; i<60; i++)
                         {
@@ -235,7 +242,7 @@ public class RobotContainer
                                 drivebase.drive(translation, desiredSpeeds.omegaRadiansPerSecond, true);
                         }
                         bFound = gamePieceSubsystem.LookForGamepiece(drivebase);
-                        if (bFound) iCount = 10;
+                        //if (bFound) iCount = 10;
                 }
                 if (bFound && (gamePieceSubsystem.GPPose != null))
                 {
@@ -246,9 +253,80 @@ public class RobotContainer
 
         }));
         NamedCommands.registerCommand("gotoGP", new InstantCommand(()->{
+                SequentialCommandGroup cmd = new SequentialCommandGroup(
+                        new ParallelCommandGroup(  
+                                new AutoIntake(Constants.IntakeConstants.Position.INTAKE),
+                                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.35))
+                            ),
+                        new ParallelCommandGroup(  
+                                PathPlannerHelper.GoToGPPose(
+                                        drivebase, GamePieceSubsystem.getInstance()),
+                                new WaitCommand(4)
+                        ),
+
+                        new AutoIntake(Constants.IntakeConstants.Position.SHOOT),
+                        new WaitCommand(0.75),  
+                        new InstantCommand(
+                                () -> IntakeSubsystem.getInstance().setSpeed(0)
+                        ),
+                        AutoBuilder.followPath(PathPlannerPath.fromPathFile("BackToBlueLine")),
+                        new ShootSequence(),
+                        new GamePieceLookUp(drivebase, 
+                                GamePieceSubsystem.getInstance()::GetFoundGP),
+
+                        new ParallelCommandGroup(  
+                                new AutoIntake(Constants.IntakeConstants.Position.INTAKE),
+                                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.35))
+                            ),
+                            new InstantCommand(()->{
+                                GamePieceSubsystem gamePieceSubsystem = GamePieceSubsystem.getInstance();
+                                Pose2d endPose = gamePieceSubsystem.GPPose;
+                                if (endPose != null)
+                                {
+                                        var gpcmd = //new SequentialCommandGroup(
+                                                new ParallelCommandGroup(
+                                                        PathPlannerHelper.goToPose(drivebase, endPose),
+                                                        new WaitCommand(4)
+                                                ).andThen(
+                                                        new AutoIntake(Constants.IntakeConstants.Position.SHOOT)
+                                                ).andThen(
+                                                        new WaitCommand(0.75)
+                                                ).andThen(
+                                                        new InstantCommand(
+                                                                () -> {
+                                                                        IntakeSubsystem.getInstance().setSpeed(0);
+                                                                }
+                                                        )
+                                                ).andThen(
+                                                        AutoBuilder.followPath(PathPlannerPath.fromPathFile("BackToBlueLine"))
+                                                )
+                                                .andThen(
+                                                        new ShootSequence()
+                                                )
+                                        //)
+                                        ;                                     
+                                        
+                                        
+                                        CommandScheduler.getInstance().schedule(gpcmd);
+                                }
+                            })
+
+
+                );
+                /*
                 var cmd = PathPlannerHelper.GoToGPPose(
                         drivebase, GamePieceSubsystem.getInstance()
-                );
+                ).alongWith(new InstantCommand(()->{
+                        intakeSubsystem.setSpeed(Position.INTAKE.getSpeed());
+                })); */
+                CommandScheduler.getInstance().schedule(cmd);
+        }));
+        NamedCommands.registerCommand("gotoGP2", new InstantCommand(()->{
+                var cmd = PathPlannerHelper.GoToGPPose(
+                        drivebase, GamePieceSubsystem.getInstance()
+                ).alongWith(new InstantCommand(()->{
+                        intakeSubsystem.setSpeed(Position.INTAKE.getSpeed());
+                })); 
                 CommandScheduler.getInstance().schedule(cmd);
         }));
 
@@ -335,5 +413,10 @@ public class RobotContainer
             return alliance.get() == DriverStation.Alliance.Red;
         }
         return false;
+    }
+
+    private void LookForGP()
+    {
+
     }
 }

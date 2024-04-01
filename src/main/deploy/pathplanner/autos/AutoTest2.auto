@@ -1,6 +1,12 @@
 {
   "version": 1.0,
-  "startingPose": null,
+  "startingPose": {
+    "position": {
+      "x": 0.64,
+      "y": 4.38
+    },
+    "rotation": -54.60000000000002
+  },
   "command": {
     "type": "sequential",
     "data": {
@@ -24,64 +30,22 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "pickupGP"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "intakeOut"
-          }
-        },
-        {
-          "type": "parallel",
+          "type": "race",
           "data": {
             "commands": [
               {
                 "type": "named",
                 "data": {
-                  "name": "gotoGP"
+                  "name": "stopShoot"
                 }
               },
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "intake"
+                  "pathName": "SpeakerS.Note8Harry"
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 6.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "intakeIn"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "shoot"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "stopIntaking"
           }
         },
         {
@@ -93,32 +57,7 @@
         {
           "type": "named",
           "data": {
-            "name": "intakeOut"
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "gotoGP"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "intake"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "shoot"
+            "name": "gotoGP"
           }
         }
       ]

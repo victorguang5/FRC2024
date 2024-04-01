@@ -44,7 +44,7 @@ public class GamePieceSubsystem extends SubsystemBase {
             }
             else
             {
-                double x_offset = 0.4; // add more distance to make sure it reach the game piece
+                double x_offset = 0.15; // add more distance to make sure it reach the game piece
                 gpTranslation = new Translation2d( 
                     gpTranslation.getX() + x_offset, gpTranslation.getY()
                 );
