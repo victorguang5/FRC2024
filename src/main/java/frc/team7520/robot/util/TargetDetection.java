@@ -118,7 +118,9 @@ public class TargetDetection {
 
             // to know installation angle, need to measure distance with camera,
             // laptop camera: 1280 X 720, vertical move to see the bottom, the distance to camera 
-            double measure_bottom_distance = 0.39;    
+            double measure_bottom_distance = 0.39;
+            measure_bottom_distance = SmartDashboard.getNumber("Camera-Bottom-Distance", 0.39);
+            System.out.printf("Camera Bottom Distance: %f\n", measure_bottom_distance);
             double install_angle = Math.atan(measure_bottom_distance / cameraHeightMeters);    
             cameraPitchRadians = -(1.5707963 - install_angle -  Math.toRadians(fov_vertical_degrees) + Math.toRadians(fov_vertical_degrees/2));
         } else {
