@@ -111,6 +111,7 @@ public class RobotContainer
 
          shooter = new Shooter(shooterSubsystem,
                 operatorController::getLeftTriggerAxis,
+                operatorController::getRightTriggerAxis,
                 operatorController::getLeftBumper
         );
 
