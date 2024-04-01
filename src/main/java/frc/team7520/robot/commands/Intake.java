@@ -19,7 +19,6 @@ public class Intake extends Command {
     private final BooleanSupplier intakePosSup;
     private final BooleanSupplier ampPosSup;
     private final BooleanSupplier reverseSup;
-    private final BooleanSupplier switchSup;
 
     public Constants.IntakeConstants.Position currPosition = Constants.IntakeConstants.Position.SHOOT;
 
@@ -31,14 +30,13 @@ public class Intake extends Command {
      * @param intakeSubsystem The subsystem used by this command.
      */
     public Intake(IntakeSubsystem intakeSubsystem, BooleanSupplier shootSup, BooleanSupplier shootPosSup,
-                  BooleanSupplier intakePosSup, BooleanSupplier ampPosSup, BooleanSupplier reverseSup, BooleanSupplier switchSup) {
+                  BooleanSupplier intakePosSup, BooleanSupplier ampPosSup, BooleanSupplier reverseSup) {
         this.intakeSubsystem = intakeSubsystem;
         this.shootSup = shootSup;
         this.shootPosSup = shootPosSup;
         this.intakePosSup = intakePosSup;
         this.ampPosSup = ampPosSup;
         this.reverseSup = reverseSup;
-        this.switchSup = switchSup;
 
         // Use addRequirements() here to declare subsystem dependencies.
         addRequirements(intakeSubsystem);

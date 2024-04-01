@@ -74,8 +74,7 @@ public class RobotContainer
             operatorController::getYButton,
             operatorController::getAButton,
             operatorController::getBButton,
-            operatorController::getXButton,
-            intakeSubsystem::getSwitchVal
+            operatorController::getXButton
         );
 
     public Shooter shooter;
@@ -253,16 +252,18 @@ public class RobotContainer
                         autoChooser.getSelected()
                 ),
                 new InstantCommand(() -> shooterSubsystem.setDefaultCommand(shooter))
-        );
+        ).finallyDo((boolean inturupted) -> {
+            if(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
+                drivebase.setGyro(drivebase.getHeading().minus(Rotation2d.fromDegrees(180)));
+            }
+
+            shooterSubsystem.setDefaultCommand(shooter);
+        });
     }
 
     public void teleOpInit() {
 
         shooterSubsystem.setDefaultCommand(shooter);
-
-        if(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
-            drivebase.setGyro(drivebase.getHeading().minus(Rotation2d.fromDegrees(180)));
-        }
 
     }
 }
