@@ -125,6 +125,7 @@ public final class Constants {
     public static class ShooterConstants {
         public static final int shooterLeftID = 20;
         public static final int shooterRightID = 21;
+        public static final int ampMechID = 25;
 
         public static final double kP = 0.002;
         public static final double kI = 0.0;

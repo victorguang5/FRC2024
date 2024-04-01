@@ -2,7 +2,7 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 1.31,
+      "x": 1.28,
       "y": 5.55
     },
     "rotation": 0
@@ -18,12 +18,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "intakeOut"
-          }
-        },
-        {
           "type": "parallel",
           "data": {
             "commands": [
@@ -31,6 +25,12 @@
                 "type": "path",
                 "data": {
                   "pathName": "Mid To Close Mid"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "intakeOut"
                 }
               },
               {
@@ -47,15 +47,15 @@
           "data": {
             "commands": [
               {
-                "type": "named",
-                "data": {
-                  "name": "intakeIn"
-                }
-              },
-              {
                 "type": "path",
                 "data": {
                   "pathName": "Close Mid to Mid"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "intakeIn"
                 }
               },
               {
@@ -87,9 +87,9 @@
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "intakeOut"
+            "pathName": "SpeakerC.Note5"
           }
         },
         {
@@ -99,32 +99,13 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "SpeakerC.Note3"
+                  "pathName": "Note5.SpeakerC"
                 }
               },
-              {
-                "type": "named",
-                "data": {
-                  "name": "intake"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
               {
                 "type": "named",
                 "data": {
                   "name": "intakeIn"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Note3.SpeakerC"
                 }
               },
               {
