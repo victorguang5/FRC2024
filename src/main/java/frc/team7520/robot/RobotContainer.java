@@ -255,14 +255,16 @@ public class RobotContainer
         }));
         NamedCommands.registerCommand("gotoGP", new InstantCommand(()->{
                 SequentialCommandGroup cmd = new SequentialCommandGroup(
-                        new ParallelCommandGroup(  
-                                new AutoIntake(Constants.IntakeConstants.Position.INTAKE),
-                                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75))
-                            ),
+
                         new ParallelCommandGroup(  
                                 new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75)),
                                 PathPlannerHelper.GoToGPPose(
-                                        drivebase, GamePieceSubsystem.getInstance()),
+                                        drivebase, GamePieceSubsystem.getInstance())
+                                        .alongWith(
+                                                                        new ParallelCommandGroup(  
+                                new AutoIntake(Constants.IntakeConstants.Position.INTAKE),
+                                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75))
+                            )),
                                 new WaitCommand(1)
                         ),
                         new AutoIntake(Constants.IntakeConstants.Position.SHOOT), 
@@ -283,13 +285,11 @@ public class RobotContainer
                                 {
                                         var gpcmd = //new SequentialCommandGroup(
                                                 new ParallelCommandGroup(
-                                                                                new ParallelCommandGroup(  
-                                new AutoIntake(Constants.IntakeConstants.Position.INTAKE),
-                                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75))
-                            ),
-
-                                                        new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75)),
-                                                        PathPlannerHelper.goToPose(drivebase, endPose),
+                                                        new AutoIntake(Constants.IntakeConstants.Position.INTAKE),
+                                                        new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75))
+                                                ).andThen(
+                                                        PathPlannerHelper.goToPose(drivebase, endPose)
+                                                ).andThen(
                                                         new WaitCommand(1)
                                                 ).andThen(
                                                         new AutoIntake(Constants.IntakeConstants.Position.SHOOT)
