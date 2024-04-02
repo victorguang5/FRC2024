@@ -17,78 +17,52 @@ import swervelib.math.SwerveMath;
 public class GamePieceLookUp extends Command {
     private final SwerveSubsystem drivebase;
     private final GamePieceSubsystem gamePieceSubsystem = GamePieceSubsystem.getInstance();
-    private BooleanSupplier foundGPSupplier;
-
-    private boolean isDone = false;
-    private boolean inProcess = false;
-    private int iCount = 0;
     
-    public GamePieceLookUp(
-        SwerveSubsystem drivebase,
-        BooleanSupplier foundGPSupplier ) {
+    public GamePieceLookUp(SwerveSubsystem drivebase) {
         this.drivebase = drivebase;
-        this.foundGPSupplier = foundGPSupplier;
-        this.isDone = false;
         
         addRequirements(this.gamePieceSubsystem);
     }
 
     @Override
     public void initialize() {
+        Boolean isRed = isRedAlliance();
+        Double theta = isRed ? 30.0 : -30.0;
 
-    }
-
-    @Override
-    public void execute() {
-        if (!isDone)
+        boolean bFound = gamePieceSubsystem.LookForGamepiece(drivebase);
+        while (!bFound)
         {
-            if (!inProcess)
+            for(int i=0; i<60; i++)
             {
-                inProcess = true;
-                gamePieceSubsystem.LookForGamepiece(drivebase);
-
-                if (!foundGPSupplier.getAsBoolean())
-                {
-                    if (iCount < 500) // max 10 seconds
-                    {
-                        iCount++;
-                        Boolean isRed = isRedAlliance();
-                        Double theta = isRed ? 30.0 : -30.0;
-
-                        var desiredSpeeds = drivebase.getTargetSpeeds(0, 0, 
-                            drivebase.getHeading().minus(Rotation2d.fromDegrees(theta)));
-                    
-                        // Limit velocity to prevent tippy
-                        Translation2d translation = SwerveController.getTranslation2d(desiredSpeeds);
-                        translation = SwerveMath.limitVelocity(translation, drivebase.getFieldVelocity(), drivebase.getPose(),
-                            Constants.LOOP_TIME, Constants.ROBOT_MASS, List.of(Constants.CHASSIS),
-                            drivebase.getSwerveDriveConfiguration());
-                        // Make the robot move
-                        drivebase.drive(translation, desiredSpeeds.omegaRadiansPerSecond, true);
-                    }
-                    else
-                    {
-                        iCount = 0;
-                        isDone = true;
-                    }
-                }
-                else
-                {
-                    SmartDashboard.putBoolean("lookup Target FoundGP", gamePieceSubsystem.FoundGP);
-                    SmartDashboard.putNumber("lookup Target X", gamePieceSubsystem.GPPose.getX());
-                    SmartDashboard.putNumber("lookup Target Y", gamePieceSubsystem.GPPose.getY());
-
-                    isDone = true;
-                }
-                inProcess = false;
+                var desiredSpeeds = drivebase.getTargetSpeeds(0, 0, 
+                    drivebase.getHeading().minus(Rotation2d.fromDegrees(theta)));
+                
+                // Limit velocity to prevent tippy
+                Translation2d translation = SwerveController.getTranslation2d(desiredSpeeds);
+                translation = SwerveMath.limitVelocity(translation, drivebase.getFieldVelocity(), drivebase.getPose(),
+                Constants.LOOP_TIME, Constants.ROBOT_MASS, List.of(Constants.CHASSIS),
+                drivebase.getSwerveDriveConfiguration());
+                // Make the robot move
+                drivebase.drive(translation, desiredSpeeds.omegaRadiansPerSecond, true);
             }
+            bFound = gamePieceSubsystem.LookForGamepiece(drivebase);
+            //if (bFound) iCount = 10;
+        }
+        if (bFound && (gamePieceSubsystem.GPPose != null))
+        {
+            SmartDashboard.putBoolean("lookup Target FoundGP", gamePieceSubsystem.FoundGP);
+            SmartDashboard.putNumber("lookup Target X", gamePieceSubsystem.GPPose.getX());
+            SmartDashboard.putNumber("lookup Target Y", gamePieceSubsystem.GPPose.getY());
         }
     }
 
     @Override
+    public void execute() {
+    }
+
+    @Override
     public boolean isFinished() {
-        return isDone;
-        //return true;
+        return true;
     }
 
     @Override

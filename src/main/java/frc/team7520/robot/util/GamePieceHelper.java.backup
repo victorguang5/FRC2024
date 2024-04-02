@@ -89,7 +89,7 @@ public class GamePieceHelper {
 
 
                 
-                new GamePieceLookUp(drivebase),
+                new GamePieceLookUp(drivebase, GamePieceSubsystem.getInstance()::GetFoundGP),
 
                 new ParallelCommandGroup(  
                     new AutoIntake(Constants.IntakeConstants.Position.INTAKE),

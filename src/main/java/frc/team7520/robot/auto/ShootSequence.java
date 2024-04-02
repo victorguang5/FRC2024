@@ -42,8 +42,7 @@ public class ShootSequence extends SequentialCommandGroup {
                                 new AutoShoot(power, false),
                                 new WaitCommand(0.5)
                         )
-                ),
-                
+                ),                
                 new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(1)),
                 new WaitCommand(1.5),
                 new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(0))
