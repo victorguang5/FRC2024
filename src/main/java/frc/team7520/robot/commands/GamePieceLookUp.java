@@ -53,7 +53,7 @@ public class GamePieceLookUp extends Command {
                     {
                         iCount++;
                         Boolean isRed = isRedAlliance();
-                        Double theta = isRed ? 20.0 : -20.0;
+                        Double theta = isRed ? 30.0 : -30.0;
 
                         var desiredSpeeds = drivebase.getTargetSpeeds(0, 0, 
                             drivebase.getHeading().minus(Rotation2d.fromDegrees(theta)));

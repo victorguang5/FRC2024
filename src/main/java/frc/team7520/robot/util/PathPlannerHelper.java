@@ -219,9 +219,9 @@ public class PathPlannerHelper {
 
         // Create the path using the bezier points created above
         PathPlannerPath path = new PathPlannerPath(
-                bezierPoints,
-                new PathConstraints(0.4, 1, Math.PI,  Math.PI), // The constraints for this path. If using a differential drivetrain, the angular constraints have no effect.
-                new GoalEndState(0.0, Rotation2d.fromDegrees(endAngle)) // Goal end state. You can set a holonomic rotation here. If using a differential drivetrain, the rotation will have no effect.
+            bezierPoints,
+            new PathConstraints(3, 2.5, Math.PI,  Math.PI), // The constraints for this path. If using a differential drivetrain, the angular constraints have no effect.
+            new GoalEndState(0.0, Rotation2d.fromDegrees(endAngle)) // Goal end state. You can set a holonomic rotation here. If using a differential drivetrain, the rotation will have no effect.
         );
 
         // Prevent the path from being flipped if the coordinates are already correct

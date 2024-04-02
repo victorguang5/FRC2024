@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.64,
-      "y": 4.38
+      "x": 0.6419522005022541,
+      "y": 4.377819358446314
     },
-    "rotation": -54.60000000000002
+    "rotation": -58.62174655629454
   },
   "command": {
     "type": "sequential",
@@ -14,31 +14,19 @@
         {
           "type": "named",
           "data": {
-            "name": "shoot"
+            "name": "shootLonger"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "stopIntaking"
+            "waitTime": 0.5
           }
         },
         {
           "type": "race",
           "data": {
             "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "stopShoot"
-                }
-              },
               {
                 "type": "path",
                 "data": {

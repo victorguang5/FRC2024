@@ -212,6 +212,7 @@ public class RobotContainer
     {
         // Example
         NamedCommands.registerCommand("shoot", new ShootSequence());
+        NamedCommands.registerCommand("shootLonger", new ShootSequence(1));
         NamedCommands.registerCommand("log", new InstantCommand(() -> System.out.println("eeeeeeeeeeeeeeeeeeeeeeeee")));
         NamedCommands.registerCommand("intakeOut", new AutoIntake(Position.INTAKE));
         NamedCommands.registerCommand("intake", new InstantCommand(() -> intakeSubsystem.setSpeed(Position.INTAKE.getSpeed())));
@@ -223,7 +224,7 @@ public class RobotContainer
                 GamePieceSubsystem gamePieceSubsystem = GamePieceSubsystem.getInstance();
                 int iCount = 0;
                 Boolean isRed = isRedAlliance();
-                Double theta = isRed ? 20.0 : -20.0;
+                Double theta = isRed ? 30.0 : -30.0;
 
                 boolean bFound = gamePieceSubsystem.LookForGamepiece(drivebase);
                 while (!bFound)
@@ -256,28 +257,25 @@ public class RobotContainer
                 SequentialCommandGroup cmd = new SequentialCommandGroup(
                         new ParallelCommandGroup(  
                                 new AutoIntake(Constants.IntakeConstants.Position.INTAKE),
-                                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.35))
+                                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75))
                             ),
                         new ParallelCommandGroup(  
+                                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75)),
                                 PathPlannerHelper.GoToGPPose(
                                         drivebase, GamePieceSubsystem.getInstance()),
-                                new WaitCommand(4)
+                                new WaitCommand(1)
                         ),
-
-                        new AutoIntake(Constants.IntakeConstants.Position.SHOOT),
-                        new WaitCommand(0.75),  
+                        new AutoIntake(Constants.IntakeConstants.Position.SHOOT), 
+                        new WaitCommand(0.5),  
                         new InstantCommand(
                                 () -> IntakeSubsystem.getInstance().setSpeed(0)
                         ),
                         AutoBuilder.followPath(PathPlannerPath.fromPathFile("BackToBlueLine")),
-                        new ShootSequence(),
+                        new ShootSequence(1),
                         new GamePieceLookUp(drivebase, 
                                 GamePieceSubsystem.getInstance()::GetFoundGP),
 
-                        new ParallelCommandGroup(  
-                                new AutoIntake(Constants.IntakeConstants.Position.INTAKE),
-                                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.35))
-                            ),
+
                             new InstantCommand(()->{
                                 GamePieceSubsystem gamePieceSubsystem = GamePieceSubsystem.getInstance();
                                 Pose2d endPose = gamePieceSubsystem.GPPose;
@@ -285,12 +283,18 @@ public class RobotContainer
                                 {
                                         var gpcmd = //new SequentialCommandGroup(
                                                 new ParallelCommandGroup(
+                                                                                new ParallelCommandGroup(  
+                                new AutoIntake(Constants.IntakeConstants.Position.INTAKE),
+                                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75))
+                            ),
+
+                                                        new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75)),
                                                         PathPlannerHelper.goToPose(drivebase, endPose),
-                                                        new WaitCommand(4)
+                                                        new WaitCommand(1)
                                                 ).andThen(
                                                         new AutoIntake(Constants.IntakeConstants.Position.SHOOT)
                                                 ).andThen(
-                                                        new WaitCommand(0.75)
+                                                        new WaitCommand(0.5)
                                                 ).andThen(
                                                         new InstantCommand(
                                                                 () -> {
@@ -413,10 +417,5 @@ public class RobotContainer
             return alliance.get() == DriverStation.Alliance.Red;
         }
         return false;
-    }
-
-    private void LookForGP()
-    {
-
     }
 }

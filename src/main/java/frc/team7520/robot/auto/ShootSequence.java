@@ -29,4 +29,25 @@ public class ShootSequence extends SequentialCommandGroup {
 //                new InstantCommand(() -> ShooterSubsystem.getInstance().setSpeed(0, false))
         );
     }
+
+    public ShootSequence(double power) {
+
+        // TODO: Add your sequential commands in the super() call, e.g.
+        //           super(new OpenClawCommand(), new MoveArmCommand());
+        super(
+                new InstantCommand(()->{SmartDashboard.putNumber("Shoot Count", shootCount++);}),
+                new ParallelCommandGroup(
+                        new AutoIntake(Constants.IntakeConstants.Position.SHOOT),
+                        new ParallelRaceGroup(
+                                new AutoShoot(power, false),
+                                new WaitCommand(0.5)
+                        )
+                ),
+                
+                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(1)),
+                new WaitCommand(2),
+                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(0))
+//                new InstantCommand(() -> ShooterSubsystem.getInstance().setSpeed(0, false))
+        );
+    }
 }
