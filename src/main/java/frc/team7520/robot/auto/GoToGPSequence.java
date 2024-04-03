@@ -24,9 +24,9 @@ public class GoToGPSequence extends SequentialCommandGroup {
                 SequentialCommandGroup cmd = new SequentialCommandGroup(
                     new ParallelCommandGroup(
                         new AutoIntake(Constants.IntakeConstants.Position.INTAKE),
-                        new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75)),
-                        PathPlannerHelper.GoToGPPose(drivebase, gamePieceSubsystem)
+                        new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75))
                     ),
+                    PathPlannerHelper.GoToGPPose(drivebase, gamePieceSubsystem),
                     new WaitCommand(1),
                     new ParallelCommandGroup(
                         new SequentialCommandGroup(
@@ -46,9 +46,9 @@ public class GoToGPSequence extends SequentialCommandGroup {
                         var gpcmd = new SequentialCommandGroup(
                             new ParallelCommandGroup(
                                 new AutoIntake(Constants.IntakeConstants.Position.INTAKE),
-                                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75)),
-                                PathPlannerHelper.GoToGPPose(drivebase, gamePieceSubsystem)
+                                new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75))
                             ),
+                            PathPlannerHelper.GoToGPPose(drivebase, gamePieceSubsystem),
                             new WaitCommand(1),
                             new ParallelCommandGroup(
                                 new SequentialCommandGroup(

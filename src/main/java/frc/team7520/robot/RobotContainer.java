@@ -200,6 +200,7 @@ public class RobotContainer
         autoChooser.addOption("AutoTest", drivebase.getPPAutoCommand("AutoTest", true));
         autoChooser.addOption("AutoTest2", drivebase.getPPAutoCommand("AutoTest2", true));
         autoChooser.addOption("AutoTest3", drivebase.getPPAutoCommand("AutoTest3", true));
+        autoChooser.addOption("AutoTestSideShootOnly", drivebase.getPPAutoCommand("AutoTestSideShootOnly", true));
  
 
         SmartDashboard.putData(autoChooser);
