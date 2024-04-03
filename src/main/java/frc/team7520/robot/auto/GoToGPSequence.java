@@ -44,12 +44,16 @@ public class GoToGPSequence extends SequentialCommandGroup {
                         if (gpPose == null) return;
                         
                         var gpcmd = new SequentialCommandGroup(
+                            /*
                             new ParallelCommandGroup(
                                 new AutoIntake(Constants.IntakeConstants.Position.INTAKE),
                                 new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(-0.75))
-                            ),
-                            PathPlannerHelper.GoToGPPose(drivebase, gamePieceSubsystem),
-                            new WaitCommand(1),
+                            ), */
+                            PathPlannerHelper.GoToGPPose(drivebase, gamePieceSubsystem)
+                            ,
+                            new WaitCommand(1)
+                            
+                            /*,
                             new ParallelCommandGroup(
                                 new SequentialCommandGroup(
                                     new AutoIntake(Constants.IntakeConstants.Position.SHOOT), 
@@ -57,8 +61,9 @@ public class GoToGPSequence extends SequentialCommandGroup {
                                     new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(0))
                                 ),
                                 AutoBuilder.followPath(PathPlannerPath.fromPathFile("BackToBlueLine"))
-                            ),
-                            new ShootSequence(1)
+                            ),                            
+                            new ShootSequence(1)  
+                            */
                         );
                         CommandScheduler.getInstance().schedule(gpcmd);
                     })
