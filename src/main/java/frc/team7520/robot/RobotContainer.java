@@ -154,6 +154,47 @@ public class RobotContainer
                 () -> driverController.getRawAxis(2), () -> true);
 
         drivebase.setDefaultCommand(closedAbsoluteDrive);
+        ampSubsystem.setDefaultCommand(amp);
+        shooterSubsystem.setDefaultCommand(shooter);
+        intakeSubsystem.setDefaultCommand(intake);
+        climberSubsystem.setDefaultCommand(climber);
+        LEDSubsystem.setDefaultCommand(LEDSubsystem.idle());
+
+        candle.animate(LEDSubsystem.idleAnimation);
+    }
+
+    private void registerAutos(){
+
+        registerNamedCommands();
+
+        autoChooser.setDefaultOption("Safe auto", drivebase.getPPAutoCommand("safe", true));
+        autoChooser.addOption("Amp", drivebase.getPPAutoCommand("Amp", true));
+        autoChooser.addOption("Test", drivebase.getPPAutoCommand("test", true));
+        autoChooser.addOption("BotToCentBot", drivebase.getPPAutoCommand("BotToCentBot", true));
+        autoChooser.addOption("MidToCentTop", drivebase.getPPAutoCommand("MidToCentTop", true));
+        autoChooser.addOption("TopToCentTop", drivebase.getPPAutoCommand("TopToCentTop", true));
+        autoChooser.addOption("2Note", drivebase.getPPAutoCommand("2NoteMid", true));
+        autoChooser.addOption("3NoteMid.Note1", drivebase.getPPAutoCommand("3NoteMid.Note1", true));
+        autoChooser.addOption("3NoteMid.Note3", drivebase.getPPAutoCommand("3NoteMid.Note3", true));
+        autoChooser.addOption("4Note", drivebase.getPPAutoCommand("4Note", true));
+        autoChooser.addOption("4Note(StraightReturn)", drivebase.getPPAutoCommand("4Note(StraightReturn)", true));
+        autoChooser.addOption("2NoteSpeakerS.Note3", drivebase.getPPAutoCommand("2NoteSpeakerS.Note3", true));
+        autoChooser.addOption("3NoteSpeakerC.Note2.SpeakerC.Note5.SpeakerC", drivebase.getPPAutoCommand("3NoteSpeakerC.Note2.SpeakerC.Note5.SpeakerC", true));
+
+        // 1note shoot and Speaker Source side to note8 parking
+        autoChooser.addOption("SpeakerS.Note8", drivebase.getPPAutoCommand("SpeakerS.Note8", true));
+
+        // 2note Ampside
+        autoChooser.addOption("SpeakerA.Note1.SpeakerA", drivebase.getPPAutoCommand("SpeakerA.Note1.SpeakerA", true));
+        // 2note Ampside with move to center
+        autoChooser.addOption("SpeakerA.Note1.SpeakerA.Note4", drivebase.getPPAutoCommand("SpeakerA.Note1.SpeakerA.Note4", true));
+        autoChooser.addOption("SpeakerS.Note8.SpeakerS", drivebase.getPPAutoCommand("SpeakerS.Note8.SpeakerS", true));
+        autoChooser.addOption("4NoteButFaster", drivebase.getPPAutoCommand("4NoteButFaster", true));
+
+        // Troll Auto
+        autoChooser.addOption("TrollAuto3NoteFeed", drivebase.getPPAutoCommand("TrollAuto3NoteFeed", true));
+
+        SmartDashboard.putData(autoChooser);
     }
 
     /**
@@ -193,6 +234,21 @@ public class RobotContainer
         // X/Lock wheels
         new JoystickButton(driverController, XboxController.Button.kX.value)
                 .whileTrue(new RepeatCommand(new InstantCommand(drivebase::lock)));
+
+        new Trigger(() -> intake.currPosition == Position.INTAKE)
+                .and(new JoystickButton(operatorController, XboxController.Button.kRightBumper.value))
+                .onTrue(new RepeatCommand(LEDSubsystem.intaking()))
+                .onFalse(LEDSubsystem.idle());
+
+        new Trigger(() -> intake.currPosition == Position.INTAKE)
+                .and(new JoystickButton(operatorController, XboxController.Button.kX.value))
+                .whileTrue(new RepeatCommand(LEDSubsystem.intaking()))
+                .onFalse(LEDSubsystem.idle());
+
+        new Trigger(intakeSubsystem::getSwitchVal)
+                .whileFalse(new RepeatCommand(LEDSubsystem.noteIn()))
+                .onTrue(LEDSubsystem.idle());
+        // Should be reversed because light switch is default false
     }
 
 
