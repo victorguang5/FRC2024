@@ -32,7 +32,7 @@ public class Shooter extends Command {
 
     @Override
     public void execute() {
-        double throttle = Math.max(throttleSup.getAsDouble(), (slowThrottleSup.getAsDouble() * 0.16)) * (invertSup.getAsBoolean() ? -1 : 1) * 1;
+        double throttle = Math.max(throttleSup.getAsDouble(), (slowThrottleSup.getAsDouble() * 0.25)) * (invertSup.getAsBoolean() ? -1 : 1) * 1;
 
         shooterSubsystem.setSpeed(throttle, false);
     }
