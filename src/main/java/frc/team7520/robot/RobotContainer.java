@@ -35,6 +35,9 @@ import frc.team7520.robot.subsystems.LED;
 import frc.team7520.robot.subsystems.intake.IntakeSubsystem;
 import frc.team7520.robot.subsystems.shooter.ShooterSubsystem;
 import frc.team7520.robot.subsystems.swerve.SwerveSubsystem;
+import frc.team7520.robot.commands.GamePieceLookUp;
+import frc.team7520.robot.auto.GoToGPSequence;
+
 
 import java.io.File;
 
@@ -195,6 +198,7 @@ public class RobotContainer
     {
         // Example
         NamedCommands.registerCommand("shoot", new ShootSequence());
+        NamedCommands.registerCommand("shootLonger", new ShootSequence(1));
         NamedCommands.registerCommand("log", new InstantCommand(() -> System.out.println("eeeeeeeeeeeeeeeeeeeeeeeee")));
         NamedCommands.registerCommand("intakeOut", new AutoIntake(Position.INTAKE));
         NamedCommands.registerCommand("intake", new InstantCommand(() -> intakeSubsystem.setSpeed(Position.INTAKE.getSpeed())));
@@ -202,7 +206,8 @@ public class RobotContainer
         NamedCommands.registerCommand("intakeIn", new AutoIntake(Position.SHOOT));
         NamedCommands.registerCommand("stopShoot", new AutoShoot(0, false));
 
-
+        NamedCommands.registerCommand("pickupGP", new GamePieceLookUp(drivebase));
+        NamedCommands.registerCommand("gotoGP", new GoToGPSequence(drivebase));
     }
 
 

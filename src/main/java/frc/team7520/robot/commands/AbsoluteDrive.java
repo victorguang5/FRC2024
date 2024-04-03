@@ -90,8 +90,8 @@ public class AbsoluteDrive extends Command {
 
         Boolean speedCutoff = speedCutoffSup.getAsBoolean();
 
-        double vXspeed = vX.getAsDouble() * (speedCutoffSup.getAsBoolean() ? 1 : 1);
-        double vYspeed = vY.getAsDouble() * (speedCutoffSup.getAsBoolean() ? 1 : 1);
+        double vXspeed = vX.getAsDouble()/2.0 * (speedCutoffSup.getAsBoolean() ? 1 : 1);
+        double vYspeed = vY.getAsDouble()/2.0 * (speedCutoffSup.getAsBoolean() ? 1 : 1);
 
         ChassisSpeeds desiredSpeeds;
 
