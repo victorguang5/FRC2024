@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import frc.team7520.robot.Constants.AmpConstants;
 import frc.team7520.robot.Constants.IntakeConstants;
 import frc.team7520.robot.Constants.IntakeConstants.Position;
 import frc.team7520.robot.Constants.OperatorConstants;
@@ -29,10 +30,13 @@ import frc.team7520.robot.commands.AbsoluteDrive;
 import frc.team7520.robot.commands.Climber;
 import frc.team7520.robot.commands.Intake;
 import frc.team7520.robot.commands.Shooter;
+
+import frc.team7520.robot.commands.Amp;
 import frc.team7520.robot.commands.TeleopDrive;
 import frc.team7520.robot.subsystems.climber.ClimberSubsystem;
 import frc.team7520.robot.subsystems.LED;
 import frc.team7520.robot.subsystems.intake.IntakeSubsystem;
+import frc.team7520.robot.subsystems.amp.AmpSubsystem;
 import frc.team7520.robot.subsystems.shooter.ShooterSubsystem;
 import frc.team7520.robot.subsystems.swerve.SwerveSubsystem;
 
@@ -57,6 +61,8 @@ public class RobotContainer
 
     private final IntakeSubsystem intakeSubsystem = IntakeSubsystem.getInstance();
 
+    private final AmpSubsystem ampSubsystem = AmpSubsystem.getInstance();
+
     private final ClimberSubsystem climberSubsystem = ClimberSubsystem.getInstance();
     private final LED LEDSubsystem = LED.getInstance();
 
@@ -76,6 +82,9 @@ public class RobotContainer
             operatorController::getBButton,
             operatorController::getXButton
         );
+
+        private final Amp amp = new Amp(ampSubsystem,
+                operatorController::getPOV);
 
     public Shooter shooter;
 
@@ -145,6 +154,7 @@ public class RobotContainer
                 () -> driverController.getRawAxis(2), () -> true);
 
         drivebase.setDefaultCommand(closedAbsoluteDrive);
+        ampSubsystem.setDefaultCommand(amp);
         shooterSubsystem.setDefaultCommand(shooter);
         intakeSubsystem.setDefaultCommand(intake);
         climberSubsystem.setDefaultCommand(climber);
@@ -238,7 +248,9 @@ public class RobotContainer
         new Trigger(intakeSubsystem::getSwitchVal)
                 .whileFalse(new RepeatCommand(LEDSubsystem.noteIn()))
                 .onTrue(LEDSubsystem.idle());
+        // Should be reversed because light switch is default false
     }
+
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.

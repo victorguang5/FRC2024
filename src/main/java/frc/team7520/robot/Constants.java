@@ -148,4 +148,48 @@ public final class Constants {
         public static final double kFF = 0.0006;
 
     }
+    public static class AmpConstants {
+        public enum Position {
+            REST(new Rotation2d(0), 1),
+            AMP(new Rotation2d(Units.degreesToRadians(83.5138969421)), 0.495);
+
+            private final Rotation2d position;
+            private final double speed;
+
+            Position(Rotation2d position, double speed) {
+                this.position = position;
+                this.speed = speed;
+            }
+
+            public Rotation2d getPosition() {
+                return position;
+            }
+
+            public double getSpeed() {
+                return speed;
+            }
+        }
+        public static final int CAN_ID = 62;
+        public static final double GearRatio = 100;
+        public static final double degreeConversionFactor = 360/GearRatio;
+        public static final double rotationConversionFactor = 1/GearRatio;
+
+        public static final double Rest = 0;
+        public static final double Amp = 135;
+
+        public static final double kP = 0.00022;
+        public static final double kI = 0;
+        public static final double kD = 0;
+        public static final double kFF = 0.000156;
+
+        public static final double OUTPUT_MAX = 1;
+        public static final double OUTPUT_MIN = -1;
+
+        public static final double SmartMaxVel = 6000; //600000
+        public static final double SmartMinVel = 0;
+        public static final double SmartAccel = 100; //10000
+        public static final double SmartErr = 2;
+        public static final int SlotID = 0;
+
+    }
 }
