@@ -225,7 +225,7 @@ public class PathPlannerHelper {
         );
 
         // Prevent the path from being flipped if the coordinates are already correct
-        path.preventFlipping = false;
+        path.preventFlipping = true;
 
         // Create a path following command using AutoBuilder. This will also trigger event markers.
         

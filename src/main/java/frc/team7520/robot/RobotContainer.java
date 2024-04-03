@@ -258,13 +258,18 @@ public class RobotContainer
                         autoChooser.getSelected()
                 ),
                 new InstantCommand(() -> shooterSubsystem.setDefaultCommand(shooter))
-        ).finallyDo((boolean inturupted) -> {
+        );
+        // This has already been fixed in the AbsoluteSubsystem
+        // The following code affects the pathplanner on-fly moving direction in red team
+        /*
+        .finallyDo((boolean inturupted) -> {
             if(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
                 drivebase.setGyro(drivebase.getHeading().minus(Rotation2d.fromDegrees(180)));
             }
 
             shooterSubsystem.setDefaultCommand(shooter);
-        });
+        })
+        */
     }
 
     public void teleOpInit() {

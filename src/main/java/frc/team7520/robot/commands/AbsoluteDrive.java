@@ -90,8 +90,8 @@ public class AbsoluteDrive extends Command {
 
         Boolean speedCutoff = speedCutoffSup.getAsBoolean();
 
-        double vXspeed = vX.getAsDouble()/2.0 * (speedCutoffSup.getAsBoolean() ? 1 : 1);
-        double vYspeed = vY.getAsDouble()/2.0 * (speedCutoffSup.getAsBoolean() ? 1 : 1);
+        double vXspeed = vX.getAsDouble() * (speedCutoffSup.getAsBoolean() ? 1 : 1);
+        double vYspeed = vY.getAsDouble() * (speedCutoffSup.getAsBoolean() ? 1 : 1);
 
         ChassisSpeeds desiredSpeeds;
 
@@ -100,10 +100,19 @@ public class AbsoluteDrive extends Command {
         } else if (CCWSpin.getAsBoolean()) {
             desiredSpeeds = swerve.getTargetSpeeds(vXspeed, vYspeed, swerve.getHeading().plus(Rotation2d.fromDegrees(20)));
         } else {
-            // Get the desired chassis speeds based on a 2 joystick module.
-            desiredSpeeds = swerve.getTargetSpeeds(vXspeed, vYspeed,
-                    headingHorizontal.getAsDouble(),
-                    headingVertical.getAsDouble());
+            if (headingHorizontal.getAsDouble() < 0.1 && headingVertical.getAsDouble() < 0.1)
+            {
+                // prevent from unexpected spinning after auton
+                desiredSpeeds = swerve.getTargetSpeeds(vXspeed, vYspeed,
+                    swerve.getHeading());
+            }
+            else
+            {
+                // Get the desired chassis speeds based on a 2 joystick module.
+                desiredSpeeds = swerve.getTargetSpeeds(vXspeed, vYspeed,
+                        headingHorizontal.getAsDouble(),
+                        headingVertical.getAsDouble());
+            }
         }
 
         // Prevent Movement After Auto
