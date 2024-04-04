@@ -38,20 +38,6 @@ public class Amp extends Command {
         addRequirements(ampSubsystem);
     }
 
-    public void handlePosition() {
-        if (posSup.getAsInt() == 90) {
-            ampSubsystem.setPosition(Constants.AmpConstants.Position.REST);
-            currPosition = Constants.AmpConstants.Position.REST;
-            return;
-        }
-        if (posSup.getAsInt() == 270) {
-            ampSubsystem.setPosition(Constants.AmpConstants.Position.AMP);
-            currPosition = Constants.AmpConstants.Position.AMP;
-            return;
-        }
-
-    }
-
     // Called when the command is initially scheduled.
     @Override
     public void initialize() {
@@ -61,19 +47,19 @@ public class Amp extends Command {
     @Override
     public void execute() {
 
-        handlePosition();
-        System.out.println(posSup.getAsInt());
+//        System.out.println(posSup.getAsInt());
         double rightSpeed = posSup.getAsInt();
         if (rightSpeed == 0) {
             //System.out.println("90");
-            rightSpeed = 0.1;
+            rightSpeed = 0.4;
         } else if (rightSpeed == 180) {
-            rightSpeed = -0.1;
+            rightSpeed = -0.7;
             //System.out.println("270");
         } else {
             rightSpeed = 0;
         }
         ampSubsystem.setSpeed(rightSpeed);
+
 
     }
 
