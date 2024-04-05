@@ -194,6 +194,8 @@ public class RobotContainer
         // Troll Auto
         autoChooser.addOption("TrollAuto3NoteFeed", drivebase.getPPAutoCommand("TrollAuto3NoteFeed", true));
 
+        autoChooser.addOption("Just shoot", new ShootSequence());
+
         SmartDashboard.putData(autoChooser);
     }
 
