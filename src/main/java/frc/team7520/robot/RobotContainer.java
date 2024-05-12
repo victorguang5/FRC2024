@@ -55,7 +55,7 @@ public class RobotContainer
 {
     // Subsystems
     private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
-            "swerve/neo"));
+            "swerve/Swerve2NeoNeo"));
 
     private final ShooterSubsystem shooterSubsystem = ShooterSubsystem.getInstance();
 
@@ -111,8 +111,8 @@ public class RobotContainer
                         OperatorConstants.LEFT_Y_DEADBAND),
                 () -> MathUtil.applyDeadband(-driverController.getLeftX(),
                         OperatorConstants.LEFT_X_DEADBAND),
-                () -> driverController.getRightX(),
-                () -> driverController.getRightY(),
+                () -> -driverController.getRightX(),
+                () -> -driverController.getRightY(),
                 driverController::getRightBumper,
                 driverController::getLeftBumper,
                 () -> false
@@ -234,6 +234,9 @@ public class RobotContainer
         // X/Lock wheels
         new JoystickButton(driverController, XboxController.Button.kX.value)
                 .whileTrue(new RepeatCommand(new InstantCommand(drivebase::lock)));
+
+        new JoystickButton(driverController, XboxController.Button.kB.value)
+                .onTrue(new InstantCommand(drivebase::resetOdometry));
 
         new Trigger(() -> intake.currPosition == Position.INTAKE)
                 .and(new JoystickButton(operatorController, XboxController.Button.kRightBumper.value))

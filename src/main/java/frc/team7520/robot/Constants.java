@@ -52,7 +52,7 @@ public final class Constants {
     }
 
     public static class Swerve {
-        public static final double DRIVE_GEAR_RATIO = 6.75;
+        public static final double DRIVE_GEAR_RATIO = 8.6; //6.75 previously. 8.6 found using trial and error
         public static final double ANGLE_GEAR_RATIO = 150/7d;
     }
 
