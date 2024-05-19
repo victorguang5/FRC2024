@@ -5,6 +5,7 @@
 
 package frc.team7520.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.cameraserver.CameraServer;
@@ -51,8 +52,8 @@ import static frc.team7520.robot.subsystems.LED.candle;
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and trigger mappings) should be declared here.
  */
-public class RobotContainer
-{
+public class RobotContainer{
+
     // Subsystems
     private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
             "swerve/Swerve2NeoNeo"));
@@ -65,8 +66,6 @@ public class RobotContainer
 
     private final ClimberSubsystem climberSubsystem = ClimberSubsystem.getInstance();
     private final LED LEDSubsystem = LED.getInstance();
-
-    public final SendableChooser<Command> autoChooser = new SendableChooser<>();
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
     private final XboxController driverController =
@@ -88,15 +87,21 @@ public class RobotContainer
 
     public Shooter shooter;
 
+//     public Command getAutonomousCommand() {
+//         return drivebase.followPathCommand("meterpath");
+//     }
+
+    private final SendableChooser<Command> autoChooser;
+
 
 
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer()
     {
+        autoChooser = AutoBuilder.buildAutoChooser();
 
-        registerAutos();
-
+        SmartDashboard.putData("Auto Chooser", autoChooser);
         CameraServer.startAutomaticCapture();
 
         // Configure the trigger bindings
@@ -163,60 +168,12 @@ public class RobotContainer
         candle.animate(LEDSubsystem.idleAnimation);
     }
 
-    private void registerAutos(){
-
-        registerNamedCommands();
-
-        autoChooser.setDefaultOption("Safe auto", drivebase.getPPAutoCommand("safe", true));
-        autoChooser.addOption("Amp", drivebase.getPPAutoCommand("Amp", true));
-        autoChooser.addOption("Test", drivebase.getPPAutoCommand("test", true));
-        autoChooser.addOption("BotToCentBot", drivebase.getPPAutoCommand("BotToCentBot", true));
-        autoChooser.addOption("MidToCentTop", drivebase.getPPAutoCommand("MidToCentTop", true));
-        autoChooser.addOption("TopToCentTop", drivebase.getPPAutoCommand("TopToCentTop", true));
-        autoChooser.addOption("2Note", drivebase.getPPAutoCommand("2NoteMid", true));
-        autoChooser.addOption("3NoteMid.Note1", drivebase.getPPAutoCommand("3NoteMid.Note1", true));
-        autoChooser.addOption("3NoteMid.Note3", drivebase.getPPAutoCommand("3NoteMid.Note3", true));
-        autoChooser.addOption("4Note", drivebase.getPPAutoCommand("4Note", true));
-        autoChooser.addOption("4Note(StraightReturn)", drivebase.getPPAutoCommand("4Note(StraightReturn)", true));
-        autoChooser.addOption("2NoteSpeakerS.Note3", drivebase.getPPAutoCommand("2NoteSpeakerS.Note3", true));
-        autoChooser.addOption("3NoteSpeakerC.Note2.SpeakerC.Note5.SpeakerC", drivebase.getPPAutoCommand("3NoteSpeakerC.Note2.SpeakerC.Note5.SpeakerC", true));
-
-        // 1note shoot and Speaker Source side to note8 parking
-        autoChooser.addOption("SpeakerS.Note8", drivebase.getPPAutoCommand("SpeakerS.Note8", true));
-
-        // 2note Ampside
-        autoChooser.addOption("SpeakerA.Note1.SpeakerA", drivebase.getPPAutoCommand("SpeakerA.Note1.SpeakerA", true));
-        // 2note Ampside with move to center
-        autoChooser.addOption("SpeakerA.Note1.SpeakerA.Note4", drivebase.getPPAutoCommand("SpeakerA.Note1.SpeakerA.Note4", true));
-        autoChooser.addOption("SpeakerS.Note8.SpeakerS", drivebase.getPPAutoCommand("SpeakerS.Note8.SpeakerS", true));
-        autoChooser.addOption("4NoteButFaster", drivebase.getPPAutoCommand("4NoteButFaster", true));
-
-        // Troll Auto
-        autoChooser.addOption("TrollAuto3NoteFeed", drivebase.getPPAutoCommand("TrollAuto3NoteFeed", true));
-
-        SmartDashboard.putData(autoChooser);
-    }
 
     /**
      * Use this method to define named commands for use in {@link PathPlannerAuto}
      *
      */
-    private void registerNamedCommands()
-    {
-        // Example
-        NamedCommands.registerCommand("shoot", new ShootSequence());
-        NamedCommands.registerCommand("log", new InstantCommand(() -> System.out.println("eeeeeeeeeeeeeeeeeeeeeeeee")));
-        NamedCommands.registerCommand("intakeOut", new AutoIntake(Position.INTAKE));
-        NamedCommands.registerCommand("intake", new InstantCommand(() -> intakeSubsystem.setSpeed(Position.INTAKE.getSpeed())));
-        NamedCommands.registerCommand("stopIntaking", new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
-        NamedCommands.registerCommand("intakeIn", new AutoIntake(Position.SHOOT));
-        NamedCommands.registerCommand("stopShoot", new AutoShoot(0, false));
-
-
-    }
-
-
-
+    
     /**
      * Use this method to define your trigger->command mappings. Triggers can be created via the
      * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
@@ -228,12 +185,24 @@ public class RobotContainer
      */
     private void configureBindings()
     {
+        // Drive meters
+        // new JoystickButton(driverController, XboxController.Button.kY.value)
+        //         .onTrue(new InstantCommand(drivebase::drivemeters));
+        new JoystickButton(driverController, XboxController.Button.kX.value)
+                 .onTrue(drivebase.followPathCommand("meterpath"));
+        new JoystickButton(driverController, XboxController.Button.kY.value)
+                 .onTrue(
+                        new InstantCommand(() ->{
+                                drivebase.OnFly().schedule();
+                        })
+                 );
+
         // Zero gyro
         new JoystickButton(driverController, XboxController.Button.kA.value)
                 .onTrue(new InstantCommand(drivebase::zeroGyro));
         // X/Lock wheels
-        new JoystickButton(driverController, XboxController.Button.kX.value)
-                .whileTrue(new RepeatCommand(new InstantCommand(drivebase::lock)));
+        // new JoystickButton(driverController, XboxController.Button.kX.value)
+        //         .whileTrue(new RepeatCommand(new InstantCommand(drivebase::lock)));
 
         new JoystickButton(driverController, XboxController.Button.kB.value)
                 .onTrue(new InstantCommand(drivebase::resetOdometry));
@@ -260,22 +229,6 @@ public class RobotContainer
      *
      * @return the command to run in autonomous
      */
-    public Command getAutonomousCommand()
-    {
-        return new SequentialCommandGroup(
-                new ParallelCommandGroup(
-                        new InstantCommand(() -> shooterSubsystem.setDefaultCommand(new AutoShoot(0.7, false))),
-                        autoChooser.getSelected()
-                ),
-                new InstantCommand(() -> shooterSubsystem.setDefaultCommand(shooter))
-        ).finallyDo((boolean inturupted) -> {
-            if(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
-                drivebase.setGyro(drivebase.getHeading().minus(Rotation2d.fromDegrees(180)));
-            }
-
-            shooterSubsystem.setDefaultCommand(shooter);
-        });
-    }
 
     public void teleOpInit() {
 

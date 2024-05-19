@@ -5,8 +5,14 @@
 package frc.team7520.robot.subsystems.swerve;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.FollowPathHolonomic;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.ConstraintsZone;
+import com.pathplanner.lib.path.EventMarker;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.RotationTarget;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
@@ -34,6 +40,8 @@ import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 
 import static frc.team7520.robot.Constants.Telemetry.SWERVE_VERBOSITY;
 
@@ -47,6 +55,7 @@ public class SwerveSubsystem extends SubsystemBase {
      * Maximum speed of the robot in meters per second, used to limit acceleration.
      */
     public double maximumSpeed = Units.feetToMeters(14.5);
+    
 
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
@@ -64,8 +73,19 @@ public class SwerveSubsystem extends SubsystemBase {
         System.out.println("\t\"angle\": " + angleConversionFactor + ",");
         System.out.println("\t\"drive\": " + driveConversionFactor);
         System.out.println("}");
+        double MillisecondsToWait = 1000;
+        double VelocityX = 1;
+        double VelocityY = 0;
+        double rotation = 0;
+        SmartDashboard.putNumber("MillisecondsToWait", MillisecondsToWait);
+        SmartDashboard.putNumber("VelocityX", VelocityX);
+        SmartDashboard.putNumber("VelocityY", VelocityY);
+        SmartDashboard.putNumber("rotation", rotation);
+        System.out.println("ran here");
 
-
+        
+    
+      
 
         // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects being created.
         SwerveDriveTelemetry.verbosity = SWERVE_VERBOSITY;
@@ -80,43 +100,73 @@ public class SwerveSubsystem extends SubsystemBase {
 
         swerveDrive.setMotorIdleMode(true);
 
-        setupPathPlanner();
+        AutoBuilder.configureHolonomic(
+            this::getPose, // Robot pose supplier
+            this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
+            this::getCurrentSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            this::drive, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
+            new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
+                    new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+                    new PIDConstants(swerveDrive.swerveController.config.headingPIDF.p,
+                                     swerveDrive.swerveController.config.headingPIDF.i,
+                                     swerveDrive.swerveController.config.headingPIDF.d), // Rotation PID constants
+                    4.5, // Max module speed, in m/s
+                    0.4, // Drive base radius in meters. Distance from robot center to furthest module.
+                    new ReplanningConfig() // Default path replanning config. See the API for the options here
+            ),
+            () -> {
+              // Boolean supplier that controls when the path will be mirrored for the red alliance
+              // This will flip the path being followed to the red side of the field.
+              // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+              var alliance = DriverStation.getAlliance();
+              if (alliance.isPresent()) {
+                return alliance.get() == DriverStation.Alliance.Red;
+              }
+              return false;
+            },
+            this // Reference to this subsystem to set requirements
+                );
+
     }
 
-    /**
-     * Setup AutoBuilder for PathPlanner.
-     */
-    public void setupPathPlanner() {
-        AutoBuilder.configureHolonomic(
+        
+
+    public Command followPathCommand(String pathName) {
+        PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
+    
+        return new FollowPathHolonomic(
+                path,
                 this::getPose, // Robot pose supplier
-                this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
-                this::getRobotVelocity, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-                this::setChassisSpeeds, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
+                this::getCurrentSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+                this::drive, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
                 new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
-                        new PIDConstants(3.75, 0.0, 0.0),
-                        // Translation PID constants
+                        new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
                         new PIDConstants(swerveDrive.swerveController.config.headingPIDF.p,
-                                swerveDrive.swerveController.config.headingPIDF.i,
-                                swerveDrive.swerveController.config.headingPIDF.d),
-                        // Rotation PID constants
-                        4.5,
-                        // Max module speed, in m/s
-                        swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters(),
-                        // Drive base radius in meters. Distance from robot center to furthest module.
-                        new ReplanningConfig()
-                        // Default path replanning config. See the API for the options here
+                                     swerveDrive.swerveController.config.headingPIDF.i,
+                                     swerveDrive.swerveController.config.headingPIDF.d), // Rotation PID constants
+                        4.5, // Max module speed, in m/s
+                        0.4, // Drive base radius in meters. Distance from robot center to furthest module.
+                        new ReplanningConfig() // Default path replanning config. See the API for the options here
                 ),
                 () -> {
-                    // Boolean supplier that controls when the path will be mirrored for the red alliance
-                    // This will flip the path being followed to the red side of the field.
-                    // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-                    var alliance = DriverStation.getAlliance();
-                    return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
+                  // Boolean supplier that controls when the path will be mirrored for the red alliance
+                  // This will flip the path being followed to the red side of the field.
+                  // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+    
+                  var alliance = DriverStation.getAlliance();
+                  if (alliance.isPresent()) {
+                    return alliance.get() == DriverStation.Alliance.Red;
+                  }
+                  return false;
                 },
                 this // Reference to this subsystem to set requirements
         );
     }
 
+    /**
+     * Setup AutoBuilder for PathPlanner.
+     */
     /**
      * Get the path follower with events.
      *
@@ -124,34 +174,12 @@ public class SwerveSubsystem extends SubsystemBase {
      * @param setOdomToStart Set the odometry position to the start of the path.
      * @return {@link AutoBuilder#followPath(PathPlannerPath)} path command.
      */
-    public Command getPathCommand(String pathName, boolean setOdomToStart) {
-        // Load the path you want to follow using its name in the GUI
-        PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
-
-        if (setOdomToStart) {
-            resetOdometry(new Pose2d(path.getPoint(0).position, getHeading()));
-        }
-
-        // Create a path following command using AutoBuilder. This will also trigger event markers.
-        return AutoBuilder.followPath(path);
-    }
-
     /**
      * Get the autonomous command for the robot.
      * @param autoName       Name of the auto file.
      * @param setOdomToStart Set the odometry position to the start of the path.
      * @return {@link PathPlannerAuto} command.
      */
-    public Command getPPAutoCommand(String autoName, boolean setOdomToStart) {
-        if (setOdomToStart) {
-            SmartDashboard.putNumber("HeadingFromFile", -1);
-//            resetOdometry(PathPlannerAuto.getStaringPoseFromAutoFile(autoName));
-        }
-        return new PathPlannerAuto(autoName);
-    }
-
-
-
     /**
      * Construct the swerve drive.
      *
@@ -177,11 +205,130 @@ public class SwerveSubsystem extends SubsystemBase {
      * @param fieldRelative Drive mode.  True for field-relative, false for robot-relative.
      */
     public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
-        swerveDrive.drive(translation,
-                rotation,
+        double x = translation.getX() / 4;
+        double y = translation.getY() / 4;  
+        Translation2d translate = new Translation2d(x, y);
+        swerveDrive.drive(translate,
+                rotation / 4,
                 fieldRelative,
                 false); // Open loop is disabled since it shouldn't be used most of the time.
     }
+
+    public Pose2d getPose() {
+        return swerveDrive.getPose();
+    }
+
+    public void resetPose(Pose2d initialHolonomicPose) {
+        swerveDrive.setGyro(new Rotation3d(0, 0, initialHolonomicPose.getRotation().getRadians()));
+
+        swerveDrive.resetOdometry(initialHolonomicPose);
+    }
+
+    public ChassisSpeeds getCurrentSpeeds() {
+        return swerveDrive.getRobotVelocity();
+    }
+
+    public void drive(ChassisSpeeds velocity) {
+        swerveDrive.drive(velocity);
+    }
+
+    public void drivemeters() {
+        double MillisecondsToWait = SmartDashboard.getNumber("MillisecondsToWait", 1000);
+        double velocityX = SmartDashboard.getNumber("VelocityX", 1);
+        double velocityY = SmartDashboard.getNumber("VelocityY", 0);
+        double rotation = SmartDashboard.getNumber("rotation", 0);
+        Translation2d translation = new Translation2d(velocityX, velocityY);
+        boolean fieldRelative = false;
+        swerveDrive.drive(translation,
+                rotation,
+                fieldRelative,
+                false);
+        System.out.println(MillisecondsToWait);
+        WaitTime(MillisecondsToWait);
+        translation = new Translation2d(0, 0);
+        swerveDrive.drive(translation,
+                rotation,
+                fieldRelative,
+                false);
+    }
+    
+    private void WaitTime(double milliseconds) {
+        try {
+            Thread.sleep((int)milliseconds);
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public Command OnFly () {
+        List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
+            new Pose2d(swerveDrive.getPose().getX(), swerveDrive.getPose().getY(), Rotation2d.fromDegrees(0)),
+            // new Pose2d(1, 1, Rotation2d.fromDegrees(0)),
+            // new Pose2d(2, 0, Rotation2d.fromDegrees(0)),
+            // new Pose2d(2, -1, Rotation2d.fromDegrees(0)),
+            // new Pose2d(0, 0, Rotation2d.fromDegrees(0))
+            new Pose2d(3, 0, Rotation2d.fromDegrees(0))
+        );
+
+        // Create the path using the bezier points created above
+        PathPlannerPath path = new PathPlannerPath(
+            bezierPoints,
+            new PathConstraints(1.0, 1.0, 2 * Math.PI, 4 * Math.PI), // The constraints for this path. If using a differential drivetrain, the angular constraints have no effect.
+            new GoalEndState(0.0, Rotation2d.fromDegrees(45)) // Goal end state. You can set a holonomic rotation here. If using a differential drivetrain, the rotation will have no effect.
+        );
+
+        RotationTarget rt = new RotationTarget(0.25, Rotation2d.fromDegrees(90), true);
+        RotationTarget rt1 = new RotationTarget(0.5, Rotation2d.fromDegrees(180), true);
+        RotationTarget rt2 = new RotationTarget(0.75, Rotation2d.fromDegrees(270), true);
+        RotationTarget rt3 = new RotationTarget(1, Rotation2d.fromDegrees(0), true);
+        List<RotationTarget> lst_rt = Arrays.asList(rt, rt1, rt2, rt3);
+        ConstraintsZone cz = new ConstraintsZone(0.3, 0.6, new PathConstraints(0.05, 0.5, 0.5 * Math.PI, 0.5 * Math.PI));
+        List<ConstraintsZone> lst_cz = Arrays.asList();
+        EventMarker em = new EventMarker(0.7, null);
+        List<EventMarker> lst_em = Arrays.asList();
+    
+        PathPlannerPath p2 = new PathPlannerPath(
+            bezierPoints,
+            lst_rt,
+            lst_cz,
+            lst_em,
+            new PathConstraints(0.2, 0.5, 0.5 * Math.PI, 0.5 * Math.PI), // The constraints for this path. If using a differential drivetrain, the angular constraints have no effect.
+            new GoalEndState(0.0, Rotation2d.fromDegrees(0)),
+            false
+        );
+
+        // Prevent the path from being flipped if the coordinates are already correct
+        path.preventFlipping =true;
+
+        return new FollowPathHolonomic(
+                p2,
+                this::getPose, // Robot pose supplier
+                this::getCurrentSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+                this::drive, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
+                new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
+                        new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+                        new PIDConstants(swerveDrive.swerveController.config.headingPIDF.p,
+                                     swerveDrive.swerveController.config.headingPIDF.i,
+                                     swerveDrive.swerveController.config.headingPIDF.d), // Rotation PID constants
+                        4.5, // Max module speed, in m/s
+                        0.4, // Drive base radius in meters. Distance from robot center to furthest module.
+                        new ReplanningConfig() // Default path replanning config. See the API for the options here
+                ),
+                () -> {
+                  // Boolean supplier that controls when the path will be mirrored for the red alliance
+                  // This will flip the path being followed to the red side of the field.
+                  // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+    
+                  var alliance = DriverStation.getAlliance();
+                  if (alliance.isPresent()) {
+                    return alliance.get() == DriverStation.Alliance.Red;
+                  }
+                  return false;
+                },
+                this // Reference to this subsystem to set requirements
+        );
+    }
+
 
     /**
      * Drive the robot given a chassis field oriented velocity.
@@ -197,15 +344,13 @@ public class SwerveSubsystem extends SubsystemBase {
      *
      * @param velocity Robot oriented {@link ChassisSpeeds}
      */
-    public void drive(ChassisSpeeds velocity) {
-        swerveDrive.drive(velocity);
-    }
 
     @Override
     public void periodic() {
         SmartDashboard.putNumber("X Position", swerveDrive.getPose().getX());
         SmartDashboard.putNumber("Y Position", swerveDrive.getPose().getY());
         SmartDashboard.putNumber("Rotation", swerveDrive.getPose().getRotation().getDegrees());
+        //SmartDashboard.putNumber("Raw Gyro", swerveDrive.);
     }
 
     @Override
@@ -228,13 +373,6 @@ public class SwerveSubsystem extends SubsystemBase {
      *
      * @param initialHolonomicPose The pose to set the odometry to
      */
-    public void resetOdometry(Pose2d initialHolonomicPose) {
-//        SmartDashboard.putNumber("ResetHeading", initialHolonomicPose.getRotation().getDegrees());
-
-        swerveDrive.setGyro(new Rotation3d(0, 0, initialHolonomicPose.getRotation().getRadians()));
-
-        swerveDrive.resetOdometry(initialHolonomicPose);
-    }
 
     /**
      * Resets odometry to the given pose. Gyro angle and module positions do not need to be reset when calling this
@@ -254,18 +392,15 @@ public class SwerveSubsystem extends SubsystemBase {
      *
      * @return The robot's pose
      */
-    public Pose2d getPose() {
-        return swerveDrive.getPose();
-    }
+
+
+    
 
     /**
      * Set chassis speeds with closed-loop velocity control.
      *
      * @param chassisSpeeds Chassis Speeds to set.
      */
-    public void setChassisSpeeds(ChassisSpeeds chassisSpeeds) {
-        swerveDrive.setChassisSpeeds(chassisSpeeds);
-    }
 
     /**
      * Post the trajectory to the field.
@@ -368,9 +503,6 @@ public class SwerveSubsystem extends SubsystemBase {
      *
      * @return A {@link ChassisSpeeds} object of the current velocity
      */
-    public ChassisSpeeds getRobotVelocity() {
-        return swerveDrive.getRobotVelocity();
-    }
 
     /**
      * Get the {@link SwerveController} in the swerve drive.
