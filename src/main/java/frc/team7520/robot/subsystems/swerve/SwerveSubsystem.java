@@ -6,6 +6,8 @@ package frc.team7520.robot.subsystems.swerve;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
@@ -34,6 +36,7 @@ import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
 import java.io.File;
+import java.util.List;
 
 import static frc.team7520.robot.Constants.Telemetry.SWERVE_VERBOSITY;
 
@@ -415,6 +418,48 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public void setGyro(Rotation2d yaw){
         swerveDrive.setGyro(new Rotation3d(0, 0, yaw.getRadians()));
+    }
+
+    /**
+     * Creates an on-the-fly path with a set curvature (route) starting from the position of the
+     * robot when the path is initiated. The curvature is field relative, always in the same direction
+     * and magnitude (think of the path as a free moving vector with a dynamic starting position). 
+     * 
+     * <p>By Robin.
+     * @return a path
+     */
+    public PathPlannerPath robinPath() {
+        double x = getPose().getX();
+        double y = getPose().getY();
+        double direction = getHeading().getDegrees();
+        /*
+         * Robin here to explain on-the-fly path. The path is created from several Pose2d objects. Each Pose2d
+         * has an X and Y coordinate representing the location of a position WAYPOINT. The rotational aspect of each Pose2d
+         * represents the angle of the tangent which the path (bezier curve of the route) enters the waypoint. 
+         * For example, if point A is at (0,0) and point B (1,1) and both have a rotational component of 0 degrees, 
+         * the robot will travel in an S shaped curve. If point A is 0 degrees but point B is 90 degrees, the path from A to B will look like a quarter
+         * of a circle. If point A is 0 degrees, but B is 180 degrees, the path will look like an upside down parabola.
+         * The difference with the last Pose2d of the path vs the GoalEndState is that the GES acts as the rotational waypoint. GES
+         * does not affect the shape of the path because it is not a position waypoint and therefore has no tangets,
+         * but only affects if the robot will spin as it traverses. Of course, GES only exists at the
+         * end of the path - to add more rotational waypoints you must use smth else...
+         */
+        List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
+            getPose(), //The Path starts at the position of the robot currently, but first move towards the direction it was facing before it curves to end point. As such, different diretions will give different curves to end point
+            new Pose2d(x + 1, y + 1, Rotation2d.fromDegrees(0)) //The end point +1 meter in the x direction and +1 meter in the y direction. Enter the end point with THE PATH FACING 0 degrees
+        );
+
+        // Create the path using the bezier points created above
+        PathPlannerPath path = new PathPlannerPath(
+            bezierPoints,
+            new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI), //Global constraints
+            new GoalEndState(0.0, Rotation2d.fromDegrees(direction)) //End with in the same direction as when the robot was facing when the path started
+        );
+
+        // Prevent the path from being flipped if the coordinates are already correct
+        path.preventFlipping =true;
+
+        return path;
     }
 
 }

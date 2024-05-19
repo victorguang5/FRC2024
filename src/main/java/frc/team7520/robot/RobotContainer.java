@@ -42,6 +42,10 @@ import frc.team7520.robot.subsystems.swerve.SwerveSubsystem;
 
 import java.io.File;
 
+//Temporary Imports BY RObin
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.auto.AutoBuilder;
+
 import static frc.team7520.robot.subsystems.LED.candle;
 
 
@@ -194,6 +198,7 @@ public class RobotContainer
         // Troll Auto
         autoChooser.addOption("TrollAuto3NoteFeed", drivebase.getPPAutoCommand("TrollAuto3NoteFeed", true));
 
+ 
         SmartDashboard.putData(autoChooser);
     }
 
@@ -252,6 +257,12 @@ public class RobotContainer
                 .whileFalse(new RepeatCommand(LEDSubsystem.noteIn()))
                 .onTrue(LEDSubsystem.idle());
         // Should be reversed because light switch is default false
+        //Robin's on-the-fly movement
+        new JoystickButton(driverController, XboxController.Button.kY.value)
+                .onTrue(new InstantCommand(() -> {
+                        var cmd = AutoBuilder.followPath(drivebase.robinPath());
+                        cmd.schedule();}
+                        ));
     }
 
 
@@ -262,6 +273,7 @@ public class RobotContainer
      */
     public Command getAutonomousCommand()
     {
+        
         return new SequentialCommandGroup(
                 new ParallelCommandGroup(
                         new InstantCommand(() -> shooterSubsystem.setDefaultCommand(new AutoShoot(0.7, false))),
@@ -275,6 +287,13 @@ public class RobotContainer
 
             shooterSubsystem.setDefaultCommand(shooter);
         });
+        
+        /* 
+        //Robin's 1m Path Test 
+        PathPlannerPath path = PathPlannerPath.fromPathFile("OneMeterByRobinTest");
+        return AutoBuilder.followPath(path);
+        */
+        
     }
 
     public void teleOpInit() {
