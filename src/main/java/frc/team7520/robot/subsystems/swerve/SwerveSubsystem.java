@@ -15,6 +15,7 @@ import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -38,6 +39,11 @@ import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 import java.io.File;
 import java.util.List;
 
+// to reinstall lib, use https://maven.photonvision.org/repository/internal/org/photonvision/photonlib-json/1.0/photonlib-json-1.0.json
+import org.photonvision.PhotonCamera;
+import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
+
 import static frc.team7520.robot.Constants.Telemetry.SWERVE_VERBOSITY;
 
 public class SwerveSubsystem extends SubsystemBase {
@@ -49,8 +55,14 @@ public class SwerveSubsystem extends SubsystemBase {
     /**
      * Maximum speed of the robot in meters per second, used to limit acceleration.
      */
-    public double maximumSpeed = Units.feetToMeters(14.5);
-
+    public double maximumSpeed = Units.feetToMeters(14.5); //14.5
+    /**
+     * Camera!
+     */
+    public PhotonCamera camera = new PhotonCamera("PhotonCam");
+    public double pitch, yaw, area = 0;
+    public double xdistance, ydistance, zdistance = 0;
+    public int id = -1;
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
      *
@@ -206,9 +218,86 @@ public class SwerveSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("X Position", swerveDrive.getPose().getX());
-        SmartDashboard.putNumber("Y Position", swerveDrive.getPose().getY());
+        /**
+         * Photonvision stuff
+         */
+        var result = camera.getLatestResult();
+        
+        boolean hasTargets = result.hasTargets();
+        ydistance = 0.1;
+        xdistance = 0.1;
+        id = -1;
+        if (hasTargets) {
+            PhotonTrackedTarget target = result.getBestTarget();
+            yaw = target.getYaw();
+            pitch = target.getPitch();
+            area = target.getArea();
+            id = target.getFiducialId();
+
+            /**
+             * Transform3d only works when photonvision has the capability of processing 3d. That is,
+             * your resolution must be high enough (1920x1080) for 3d to process, otherwise Transform3d 
+             * gives you nothing. One more thing! In order to access 3d measurements, you need to be on the
+             * 3d tab on Photonvision dashboard. The 2d process tab gives no 3d values!
+             */
+            Transform3d measurement = target.getBestCameraToTarget();
+            //trigonometricCalculatedDistance(measurement);
+            vectorCalculatedDistance(measurement);
+            
+            SmartDashboard.putNumber("X", measurement.getX());
+            SmartDashboard.putNumber("Y", measurement.getY());
+        }
+        
+        
+
+        //SmartDashboard.putNumber("X Position", swerveDrive.getPose().getX());
+        //SmartDashboard.putNumber("Y Position", swerveDrive.getPose().getY());
         SmartDashboard.putNumber("Rotation", swerveDrive.getPose().getRotation().getDegrees());
+        SmartDashboard.putBoolean("Detected!", hasTargets);
+        SmartDashboard.putNumber("Tag X", xdistance);
+        SmartDashboard.putNumber("Tag Y", ydistance);
+        SmartDashboard.putNumber("Yaw", yaw);
+        //SmartDashboard.putNumber("Tag Z", zdistance);
+        
+        //SmartDashboard.putNumber("Tag Area", area);
+    }
+
+    /**
+     * Calculates the coordinates for the robot to move to an april tag, field relative. This method attempts to take the heading into account.
+     * This method updates the coordinates for the robot to move towards when On-The-Fly pathplanner is called. By using the heading angle, theta,
+     * it breaks down the relative X and Y paths into absolute/field oriented X and Y componenents. The abs components from each relative component
+     * is added together to create a total path that pathplanner uses.
+     * 
+     * <p> The problem here is that the heading is in range of +-180 degrees, and trig ratios change signs (+/-) in different quadrants. Therefore
+     * when you attempt to calculate components based off of just the heading angle, sometimes it doesn't add up properly. For example, when the heading is
+     * -135 degrees and the target is abs +x direction, the calculated abs x component is actually opposite to the april tag, so it goes backwards.
+     * There is a flaw in this math, and a new method is to replace this one.
+     * 
+     * <p> By Robin
+     * @param measurement the target percieved in 3 dimensions
+     * @see #vectorCalculatedDistance(Transform3d) 
+     * @deprecated
+     */
+    public void trigonometricCalculatedDistance(Transform3d measurement) {
+        ydistance = measurement.getX() * Math.sin((getHeading().getRadians())) + measurement.getY() * Math.cos((getHeading().getRadians()));
+        xdistance = - measurement.getY() * Math.sin(Math.abs(getHeading().getRadians())) + measurement.getX() * Math.cos((getHeading().getRadians()));
+    }
+
+    /**
+     * Calculates the abs x and y distance from the current position to a target position. This method makes use of literal 2d vectors through
+     * the Translation2d library. In theory, find a position vector relative to the robot, find it's angle to the forward facing vector, and 
+     * adding that to the heading find the abs vector with its direction, and therefore the abs x and y components. Very easy!
+     * 
+     * <p> By Robin
+     * @param measurement the target percieved in 3 dimensions
+     */
+    public void vectorCalculatedDistance(Transform3d measurement) {
+        // What if we analyzed component paths as 2d vectors using translation2d?
+        Translation2d relativeVector = new Translation2d(measurement.getX(), measurement.getY());
+        Translation2d absoluteVector = new Translation2d(relativeVector.getNorm(), new Rotation2d(getHeading().getRadians() + relativeVector.getAngle().getRadians()));
+        SmartDashboard.putNumber("Distance To Target", relativeVector.getNorm());
+        xdistance = absoluteVector.getX();
+        ydistance = absoluteVector.getY();
     }
 
     @Override
@@ -432,6 +521,7 @@ public class SwerveSubsystem extends SubsystemBase {
         double x = getPose().getX();
         double y = getPose().getY();
         double direction = getHeading().getDegrees();
+        
         /*
          * Robin here to explain on-the-fly path. The path is created from several Pose2d objects. Each Pose2d
          * has an X and Y coordinate representing the location of a position WAYPOINT. The rotational aspect of each Pose2d
@@ -446,7 +536,7 @@ public class SwerveSubsystem extends SubsystemBase {
          */
         List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
             getPose(), //The Path starts at the position of the robot currently, but first move towards the direction it was facing before it curves to end point. As such, different diretions will give different curves to end point
-            new Pose2d(x + 1, y + 1, Rotation2d.fromDegrees(0)) //The end point +1 meter in the x direction and +1 meter in the y direction. Enter the end point with THE PATH FACING 0 degrees
+            new Pose2d(x + xdistance, y + ydistance, Rotation2d.fromDegrees(direction)) //The end point +1 meter in the x direction and +1 meter in the y direction. Enter the end point with THE PATH FACING 0 degrees
         );
 
         // Create the path using the bezier points created above
