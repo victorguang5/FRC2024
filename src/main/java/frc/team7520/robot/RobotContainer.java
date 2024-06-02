@@ -105,7 +105,7 @@ public class RobotContainer
                 () -> driverController.getRightY(),
                 driverController::getRightBumper,
                 driverController::getLeftBumper,
-                () -> false
+                () -> true
         );
 
          shooter = new Shooter(shooterSubsystem,
@@ -154,7 +154,7 @@ public class RobotContainer
     private void registerAutos(){
 
         registerNamedCommands();
-
+        /* 
         autoChooser.setDefaultOption("Safe auto", drivebase.getPPAutoCommand("safe", true));
         autoChooser.addOption("Amp", drivebase.getPPAutoCommand("Amp", true));
         autoChooser.addOption("Test", drivebase.getPPAutoCommand("test", true));
@@ -178,6 +178,7 @@ public class RobotContainer
         autoChooser.addOption("4Note=SpeakerC.Note2.SpeakerC.Note1.SpeakerC.Note3.SpeakerC", drivebase.getPPAutoCommand("4Note=SpeakerC.Note2.SpeakerC.Note1.SpeakerC.Note3.SpeakerC", true));
 
         SmartDashboard.putData(autoChooser);
+        */
     }
 
     /**

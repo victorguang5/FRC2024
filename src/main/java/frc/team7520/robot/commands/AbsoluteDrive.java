@@ -129,6 +129,8 @@ public class AbsoluteDrive extends Command {
         SmartDashboard.putNumber("LimitedTranslation", translation.getX());
         SmartDashboard.putString("Translation", translation.toString());
 
+        translation = speedCutoff ? translation.times(0.5) : translation;
+
         // Make the robot move
         swerve.drive(translation, desiredSpeeds.omegaRadiansPerSecond, true);
 
