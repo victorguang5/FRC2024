@@ -115,7 +115,7 @@ public class RobotContainer
                 () -> driverController.getRightY(),
                 driverController::getRightBumper,
                 driverController::getLeftBumper,
-                () -> driverController.getXButton()
+                () -> true
         );
 
          shooter = new Shooter(shooterSubsystem,
