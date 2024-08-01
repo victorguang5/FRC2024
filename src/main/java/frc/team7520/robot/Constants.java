@@ -64,7 +64,7 @@ public final class Constants {
 
     public static class IntakeConstants {
         public enum Position {
-            SHOOT(new Rotation2d(0), 1),
+            SHOOT(new Rotation2d(0), 0.2), //SPEED USED TO BE 1
             INTAKE(new Rotation2d(Units.degreesToRadians(212.152317734808d)), -0.3),
             AMP(new Rotation2d(Units.degreesToRadians(83.5138969421)), 0.495);
 
