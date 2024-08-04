@@ -64,8 +64,8 @@ public final class Constants {
 
     public static class IntakeConstants {
         public enum Position {
-            SHOOT(new Rotation2d(0), 0.2), //SPEED USED TO BE 1
-            INTAKE(new Rotation2d(Units.degreesToRadians(212.152317734808d)), -0.3),
+            SHOOT(new Rotation2d(0), 0.4), //SPEED USED TO BE 1
+            INTAKE(new Rotation2d(Units.degreesToRadians(212.152317734808d)), -0.4),
             AMP(new Rotation2d(Units.degreesToRadians(83.5138969421)), 0.495);
 
             private final Rotation2d position;
@@ -123,8 +123,8 @@ public final class Constants {
     }
 
     public static class ShooterConstants {
-        public static final int shooterLeftID = 20;
-        public static final int shooterRightID = 21;
+        public static final int shooterLeftID = 21;
+        public static final int shooterRightID = 20;
         public static final int ampMechID = 25;
 
         public static final double kP = 0.002;

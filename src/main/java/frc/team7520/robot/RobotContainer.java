@@ -10,6 +10,11 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.DoubleTopic;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringTopic;
+import edu.wpi.first.networktables.Topic;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.XboxController;
@@ -57,9 +62,19 @@ import static frc.team7520.robot.subsystems.LED.candle;
  */
 public class RobotContainer
 {
+        public NetworkTableInstance inst = NetworkTableInstance.getDefault();
+        public NetworkTable table = inst.getTable("noteTable");
+
+        // get a topic from a NetworkTableInstance
+        // the topic name in this case is the full name
+
+        //"Detections" supplies all notes detected, MaxConfObj gives only one
+        public StringTopic StrTopic = inst.getStringTopic("/noteTable/MaxConfObj");
+
+
     // Subsystems
     private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
-            "swerve/Swerve3Neo"));
+            "swerve/Swerve3Neo"), StrTopic);
 
     private final ShooterSubsystem shooterSubsystem = ShooterSubsystem.getInstance();
 
@@ -93,8 +108,6 @@ public class RobotContainer
     public Shooter shooter;
 
 
-
-
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer()
     {
@@ -119,7 +132,8 @@ public class RobotContainer
                 () -> -driverController.getRightY(),
                 driverController::getRightBumper,
                 driverController::getLeftBumper,
-                () -> false
+                () -> false,
+                StrTopic
         );
 
          shooter = new Shooter(shooterSubsystem,

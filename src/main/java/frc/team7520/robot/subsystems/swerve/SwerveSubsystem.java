@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.networktables.*;
 import frc.team7520.robot.Constants;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
@@ -57,12 +58,15 @@ public class SwerveSubsystem extends SubsystemBase {
      */
     public double maximumSpeed = Units.feetToMeters(14.5); //14.5
     /**
-     * Camera!
+     * Camera for photon
      */
     public PhotonCamera camera = new PhotonCamera("PhotonCam");
     public double pitch, yaw, area = 0;
     public double xdistance, ydistance, zdistance = 0;
     public int id = -1;
+
+    
+    public TpuSystem tpu;
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
      *
@@ -81,6 +85,36 @@ public class SwerveSubsystem extends SubsystemBase {
         System.out.println("}");
 
 
+
+        // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects being created.
+        SwerveDriveTelemetry.verbosity = SWERVE_VERBOSITY;
+        try {
+//            swerveDrive = new SwerveParser(directory).createSwerveDrive(maximumSpeed);
+            // Alternative method if you don't want to supply the conversion factor via JSON files.
+            swerveDrive = new SwerveParser(directory).createSwerveDrive(maximumSpeed, angleConversionFactor, driveConversionFactor);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        swerveDrive.setHeadingCorrection(false); // Heading correction should only be used while controlling the robot via angle.
+
+        swerveDrive.setMotorIdleMode(true);
+
+        setupPathPlanner();
+    }
+
+    public SwerveSubsystem(File directory, StringTopic topic) {
+        // Angle conversion factor is 360 / (GEAR RATIO * ENCODER RESOLUTION)
+        //  The encoder resolution per motor revolution is 1 per motor revolution.
+        double angleConversionFactor = SwerveMath.calculateDegreesPerSteeringRotation(Constants.Swerve.ANGLE_GEAR_RATIO, 1);
+        // Motor conversion factor is (PI * WHEEL DIAMETER IN METERS) / (GEAR RATIO * ENCODER RESOLUTION).
+        //  The encoder resolution per motor revolution is 1 per motor revolution.
+        double driveConversionFactor = SwerveMath.calculateMetersPerRotation(Units.inchesToMeters(4), Constants.Swerve.DRIVE_GEAR_RATIO, 1);
+        System.out.println("\"conversionFactor\": {");
+        System.out.println("\t\"angle\": " + angleConversionFactor + ",");
+        System.out.println("\t\"drive\": " + driveConversionFactor);
+        System.out.println("}");
+
+        tpu = new TpuSystem(topic);
 
         // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects being created.
         SwerveDriveTelemetry.verbosity = SWERVE_VERBOSITY;
@@ -218,11 +252,8 @@ public class SwerveSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        /**
-         * Photonvision stuff
-         */
+        /** Photonvision stuff */
         var result = camera.getLatestResult();
-        
         boolean hasTargets = result.hasTargets();
         ydistance = 0.1;
         xdistance = 0.1;
@@ -234,32 +265,23 @@ public class SwerveSubsystem extends SubsystemBase {
             area = target.getArea();
             id = target.getFiducialId();
 
-            /**
-             * Transform3d only works when photonvision has the capability of processing 3d. That is,
-             * your resolution must be high enough (1920x1080) for 3d to process, otherwise Transform3d 
-             * gives you nothing. One more thing! In order to access 3d measurements, you need to be on the
-             * 3d tab on Photonvision dashboard. The 2d process tab gives no 3d values!
-             */
+            /** Transform3d only works when that resolution size for processing stream has been trained/calibrated. */
             Transform3d measurement = target.getBestCameraToTarget();
-            //trigonometricCalculatedDistance(measurement);
             vectorCalculatedDistance(measurement);
             
             SmartDashboard.putNumber("X", measurement.getX());
             SmartDashboard.putNumber("Y", measurement.getY());
         }
-        
-        
 
-        //SmartDashboard.putNumber("X Position", swerveDrive.getPose().getX());
-        //SmartDashboard.putNumber("Y Position", swerveDrive.getPose().getY());
+        /** Note Detection Stuff */
+        tpu.periodic();
+
+        /** For april tag detection */
         SmartDashboard.putNumber("Rotation", swerveDrive.getPose().getRotation().getDegrees());
         SmartDashboard.putBoolean("Detected!", hasTargets);
         SmartDashboard.putNumber("Tag X", xdistance);
         SmartDashboard.putNumber("Tag Y", ydistance);
         SmartDashboard.putNumber("Yaw", yaw);
-        //SmartDashboard.putNumber("Tag Z", zdistance);
-        
-        //SmartDashboard.putNumber("Tag Area", area);
     }
 
     /**

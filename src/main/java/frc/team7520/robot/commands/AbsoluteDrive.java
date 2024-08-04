@@ -7,6 +7,7 @@ package frc.team7520.robot.commands;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.StringTopic;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.team7520.robot.Constants;
@@ -28,6 +29,7 @@ public class AbsoluteDrive extends Command {
     private final DoubleSupplier headingHorizontal, headingVertical;
     private final BooleanSupplier CCWSpin, CWSpin, speedCutoffSup;
     private boolean initRotation = false;
+    private StringTopic topic;
 
     /**
      * Used to drive a swerve robot in full field-centric mode.  vX and vY supply translation inputs, where x is
@@ -77,6 +79,32 @@ public class AbsoluteDrive extends Command {
         addRequirements(swerve);
     }
 
+    /**
+     * Requires extra networktable topic for note detection, supply the topic labeled MaxConfObj
+     * @param swerve
+     * @param vX
+     * @param vY
+     * @param headingHorizontal
+     * @param headingVertical
+     * @param CWSpin
+     * @param CCWSpin
+     * @param speedCutoffSup
+     * @param noteTopic
+     */
+    public AbsoluteDrive(SwerveSubsystem swerve, DoubleSupplier vX, DoubleSupplier vY, DoubleSupplier headingHorizontal,
+                         DoubleSupplier headingVertical, BooleanSupplier CWSpin, BooleanSupplier CCWSpin, BooleanSupplier speedCutoffSup, StringTopic noteTopic) {
+        this.swerve = swerve;
+        this.vX = vX;
+        this.vY = vY;
+        this.headingHorizontal = headingHorizontal;
+        this.headingVertical = headingVertical;
+        this.CCWSpin = CCWSpin;
+        this.CWSpin = CWSpin;
+        this.speedCutoffSup = speedCutoffSup;
+        topic = noteTopic;
+
+        addRequirements(swerve);
+    }
 
     @Override
     public void initialize() {

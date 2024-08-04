@@ -16,8 +16,8 @@ public class ShooterSubsystem extends SubsystemBase {
     // constructor must appear before the "INSTANCE" variable so that they are initialized
     // before the constructor is called when the "INSTANCE" variable initializes.
 
-    private TalonFX leftShooterMotor;
-    private TalonFX rightShooterMotor;
+    private CANSparkMax leftShooterMotor;
+    private CANSparkMax rightShooterMotor;
 
     private SparkPIDController leftShooterPID;
     private SparkPIDController rightShooterPID;
@@ -100,9 +100,13 @@ public class ShooterSubsystem extends SubsystemBase {
 //        leftShooterMotor.setIdleMode(CANSparkMax.IdleMode.kCoast);
 //        rightShooterMotor.setIdleMode(CANSparkMax.IdleMode.kCoast);
 
-        leftShooterMotor = new TalonFX(Constants.ShooterConstants.shooterLeftID);
-        rightShooterMotor = new TalonFX(Constants.ShooterConstants.shooterRightID);
+        /* For TALONFX */
+        //leftShooterMotor = new TalonFX(Constants.ShooterConstants.shooterLeftID);
+        //rightShooterMotor = new TalonFX(Constants.ShooterConstants.shooterRightID);
 
+        /* For NEO */
+        leftShooterMotor = new CANSparkMax(Constants.ShooterConstants.shooterLeftID, CANSparkMax.MotorType.kBrushless);
+        rightShooterMotor = new CANSparkMax(Constants.ShooterConstants.shooterRightID, CANSparkMax.MotorType.kBrushless);
 
         leftShooterMotor.setInverted(false);
         rightShooterMotor.setInverted(true);
