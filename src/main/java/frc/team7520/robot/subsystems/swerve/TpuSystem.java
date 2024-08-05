@@ -1,3 +1,13 @@
+/* ------------------------------------------------------------------------------------------------------------------------------------
+ * TpuSystem
+ * Robin Yan
+ * 08/02/2024
+ * A class used to organize the information recieved from the NetworkTables published by the Raspberry Pi + TPU.
+ * The TpuSystem object requires a StringTopic, a topic found under the noteTable table, to read and decode.
+ * This class analyzes the string and isolates key information about a detected note.
+ * Using the information and some math, it calculates an estimated distance to the note in terms of X and Y (following FRC coordinates)
+ * ------------------------------------------------------------------------------------------------------------------------------------ */
+
 package frc.team7520.robot.subsystems.swerve;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -20,30 +30,41 @@ import java.util.List;
 
 public class TpuSystem {
   // the subscriber is an instance variable so its lifetime matches that of the class
-  final StringSubscriber noteInfo;
+  final StringSubscriber NOTE_INFO;
   private double xPos, yPos, height, width, confidence, area = -1;
 
+  /*
+   * Terminology being used here:
+   * Bottom - very bottom of the screen/stream being processed. Angle is 47.2° from horizontal
+   * Top - very top of the stream whose angle is near 0° to the horizontal, parallel to the ground
+   * Center - refered to both in terms right to left and top to bottom. In terms of top to bottom, center is located 23.2° from horizontal
+   */
+  final private double SCREEN_WIDTH  = 640; // A stream is constructed were (0,0) is the top left corner, and (640,480) is the bottom right
+  final private double SCREEN_HEIGHT = 480;
+  final private double X_DPP = 58 / SCREEN_WIDTH; // Degrees per pixel. Measured by 29° from center of screen to side
+  final private double Y_DPP = 0.1; // Degrees per pixel. Measured as bottom being 47.2° from the top horizontal. Top angle is therefore 0.8° above horiztonal
+  final private double CAM_HEIGHT = 0.6858; // In meters off the floor, AKA 27 inches. We assume the camera is located directly above robot center
+  final private double DISTANCE_AT_BOTTOM = 0.508; // In meters forward of center of robot, AKA 20 inches
+  final private double X_CENTER = SCREEN_WIDTH/2; // 320 pixel from the left side
+  private double relativeXDistance = 0; // Position of a note estimated from data receieved from NetworkTables. Follows FRC coordinates system
+  private double relativeYDistance = 0; // In meters
+
+
+  /**
+   * 
+   * @param detection the StringTopic that gives a details of ONE note. Does not currently support multiple note detection.
+   */
   public TpuSystem(StringTopic detection) {
-    // start subscribing; the return value must be retained.
-    // the parameter is the default value if no value is available when get() is called
-    noteInfo = detection.subscribe("[{'x':None,'y':None,'w':None,'h':None,'conf':0}]");
-
-    // subscribe options may be specified using PubSubOption. 
-    /** Consider polling and queues for consistently tracking the same note, avoid noise and randoms */
-    //dblSub = dblTopic.subscribe(0.0, PubSubOption.keepDuplicates(false), PubSubOption.pollStorage(10));
-
-    // subscribeEx provides the options of using a custom type string.
-    // Using a custom type string for types other than raw and string is not recommended.
-    //dblSub = dblTopic.subscribeEx("double", 0.0);
+    NOTE_INFO = detection.subscribe("[{'x':None,'y':None,'w':None,'h':None,'conf':0}]");
   }
 
   /**
-   * Periodically checks
+   * Periodically checks if a note is detected
    */
   public void periodic() {
     // simple get of most recent value; if no value has been published,
     // returns the default value passed to the subscribe() function
-    String val = noteInfo.get();
+    String val = NOTE_INFO.get();
 
     boolean found = translateInfo(val);
     if (found) {
@@ -54,36 +75,22 @@ public class TpuSystem {
       area = -1;
       confidence = -1;
     }
-    // get the most recent value; if no value has been published, returns
-    // the passed-in default value
-    //double val = dblSub.get(-1.0);
-
-    // subscribers also implement the appropriate Supplier interface, e.g. DoubleSupplier
-    //double val = dblSub.getAsDouble();
-
-    // get the most recent value, along with its timestamp
-    //TimestampedDouble tsVal = dblSub.getAtomic();
-
-    // read all value changes since the last call to readQueue/readQueueValues
-    // readQueue() returns timestamps; readQueueValues() does not.
-    //TimestampedDouble[] tsUpdates = dblSub.readQueue();
-    //double[] valUpdates = dblSub.readQueueValues();
 
     SmartDashboard.putString("Coordinates", xPos + ", " + yPos);
     SmartDashboard.putNumber("Area", area);
     SmartDashboard.putNumber("Note C", confidence);
   }
 
-  // often not required in robot code, unless this class doesn't exist for
-  // the lifetime of the entire robot program, in which case close() needs to be
-  // called to stop subscribing
+  /**
+   * Closes the subscriber, though not always necessary needed
+   */
   public void close() {
     // stop subscribing
-    noteInfo.close();
+    NOTE_INFO.close();
   }
 
   /**
-   * Reads the value suscribed off the NetworkTables for note detection, 
+   * Reads the value suscribed off the NetworkTables for note detection by breaking a larger string into isolated values. Currently not able to read multiple note detection.
    * @param value
    * @return
    */
@@ -127,5 +134,15 @@ public class TpuSystem {
       System.out.println("INDEX OUT OF BOUNDS");
       return false;
     }
+  }
+
+  /**
+   * Uses found measurements and trigonometry to estimate the location of a note relative to the robot center
+   * @return a Translation2d of the note detected
+   */
+  public Translation2d trigonemtricCalculatedDistance() {
+    relativeXDistance = CAM_HEIGHT/(Math.tan(Math.toRadians(yPos*Y_DPP)));
+    relativeYDistance = Math.hypot(relativeXDistance, CAM_HEIGHT)*Math.tan(Math.toRadians((X_CENTER-xPos)*(X_DPP)));
+    return new Translation2d(relativeXDistance, relativeYDistance);
   }
 }
