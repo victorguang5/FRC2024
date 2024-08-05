@@ -276,8 +276,8 @@ public class SwerveSubsystem extends SubsystemBase {
         /** Note Detection Stuff */
         tpu.periodic();
         // Be AWARE that xdistance and ydistance MAY BE USED FOR APRIL TAGS
-        Translation2d relativeNoteLocation = tpu.trigonemtricCalculatedDistance();
-        // vectorCalculatedDistance(relativeNoteLocation);
+        Translation2d relativeNoteLocation = tpu.getNoteLocation();
+        vectorCalculatedDistance(relativeNoteLocation);
         SmartDashboard.putNumber("X Distance To Note", relativeNoteLocation.getX());
         SmartDashboard.putNumber("Y Distance To Note", relativeNoteLocation.getY());
 
@@ -305,7 +305,7 @@ public class SwerveSubsystem extends SubsystemBase {
      * @see #vectorCalculatedDistance(Transform3d) 
      * @deprecated
      */
-    public void trigonometricCalculatedDistance(Transform3d measurement) {
+    public @Deprecated void trigonometricCalculatedDistance(Transform3d measurement) {
         ydistance = measurement.getX() * Math.sin((getHeading().getRadians())) + measurement.getY() * Math.cos((getHeading().getRadians()));
         xdistance = - measurement.getY() * Math.sin(Math.abs(getHeading().getRadians())) + measurement.getX() * Math.cos((getHeading().getRadians()));
     }
@@ -335,11 +335,10 @@ public class SwerveSubsystem extends SubsystemBase {
      * <p> By Robin
      * @param measurement the target percieved in 2 dimensions, birds eye view.
      */
-    public void vectorCalculatedDistance(Translation2d measurement) {
+    public void vectorCalculatedDistance(Translation2d relativeVector) {
         // What if we analyzed component paths as 2d vectors using translation2d?
-        Translation2d relativeVector = new Translation2d(measurement.getX(), measurement.getY());
         Translation2d absoluteVector = new Translation2d(relativeVector.getNorm(), new Rotation2d(getHeading().getRadians() + relativeVector.getAngle().getRadians()));
-        SmartDashboard.putNumber("Distance To Target", relativeVector.getNorm());
+        SmartDashboard.putNumber("Absolute Distance to Note", relativeVector.getNorm());
         xdistance = absoluteVector.getX();
         ydistance = absoluteVector.getY();
     }

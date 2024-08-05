@@ -49,6 +49,10 @@ public class TpuSystem {
   private double relativeXDistance = 0; // Position of a note estimated from data receieved from NetworkTables. Follows FRC coordinates system
   private double relativeYDistance = 0; // In meters
 
+  final private double YDISTANCE_OFFSET = 0.15; // In meters to the left. What is actually calculated as relativeYDistance is 0.15m off physical measurements
+  final private double XDISTANCE_REDUCTION = 0.4; // To prevent robot from running over note's location, stopping it in front of note in position for pick up
+
+  private Translation2d noteLocation;
 
   /**
    * 
@@ -69,11 +73,13 @@ public class TpuSystem {
     boolean found = translateInfo(val);
     if (found) {
       area = width*height;
+      noteLocation = trigonemtricCalculatedDistance();
     } else {
       xPos = -1;
       yPos = -1;
       area = -1;
       confidence = -1;
+      noteLocation = new Translation2d(0,0);
     }
 
     SmartDashboard.putString("Coordinates", xPos + ", " + yPos);
@@ -140,9 +146,16 @@ public class TpuSystem {
    * Uses found measurements and trigonometry to estimate the location of a note relative to the robot center
    * @return a Translation2d of the note detected
    */
-  public Translation2d trigonemtricCalculatedDistance() {
+  private Translation2d trigonemtricCalculatedDistance() {
     relativeXDistance = CAM_HEIGHT/(Math.tan(Math.toRadians(yPos*Y_DPP)));
     relativeYDistance = Math.hypot(relativeXDistance, CAM_HEIGHT)*Math.tan(Math.toRadians((X_CENTER-xPos)*(X_DPP)));
-    return new Translation2d(relativeXDistance, relativeYDistance);
+    return new Translation2d(relativeXDistance - XDISTANCE_REDUCTION, relativeYDistance + YDISTANCE_OFFSET);
+  }
+
+  public Translation2d getNoteLocation() {
+    if (noteLocation == null) {
+      return new Translation2d(0,0);
+    }
+    return noteLocation;
   }
 }
