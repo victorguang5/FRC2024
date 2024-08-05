@@ -257,6 +257,8 @@ public class RobotContainer
         new JoystickButton(driverController, XboxController.Button.kB.value)
                 .onTrue(new InstantCommand(drivebase::resetOdometry));
 
+        /* // Items are not working as intended and are overriding the important led indication of having a note, GREEN
+        
         new Trigger(() -> intake.currPosition == Position.INTAKE)
                 .and(new JoystickButton(operatorController, XboxController.Button.kRightBumper.value))
                 .onTrue(new RepeatCommand(LEDSubsystem.intaking()))
@@ -266,6 +268,7 @@ public class RobotContainer
                 .and(new JoystickButton(operatorController, XboxController.Button.kX.value))
                 .whileTrue(new RepeatCommand(LEDSubsystem.intaking()))
                 .onFalse(LEDSubsystem.idle());
+        */
 
         new Trigger(intakeSubsystem::getSwitchVal)
                 .whileFalse(new RepeatCommand(LEDSubsystem.noteIn()))
