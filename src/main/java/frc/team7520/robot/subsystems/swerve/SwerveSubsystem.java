@@ -276,7 +276,7 @@ public class SwerveSubsystem extends SubsystemBase {
         /** Note Detection Stuff */
         tpu.periodic();
         // Be AWARE that xdistance and ydistance MAY BE USED FOR APRIL TAGS
-        Translation2d relativeNoteLocation = tpu.getNoteLocation();
+        Translation2d relativeNoteLocation = tpu.getBestNoteLocation();
         vectorCalculatedDistance(relativeNoteLocation);
         SmartDashboard.putNumber("X Distance To Note", relativeNoteLocation.getX());
         SmartDashboard.putNumber("Y Distance To Note", relativeNoteLocation.getY());

@@ -69,7 +69,7 @@ public class RobotContainer
         // the topic name in this case is the full name
 
         //"Detections" supplies all notes detected, MaxConfObj gives only one
-        public StringTopic StrTopic = inst.getStringTopic("/noteTable/MaxConfObj");
+        public StringTopic StrTopic = inst.getStringTopic("/noteTable/Detections");
 
 
     // Subsystems

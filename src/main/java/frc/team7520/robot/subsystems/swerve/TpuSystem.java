@@ -2,10 +2,9 @@
  * TpuSystem
  * Robin Yan
  * 08/02/2024
- * A class used to organize the information recieved from the NetworkTables published by the Raspberry Pi + TPU.
+ * A class used to represent a list of detections from the NetworkTables published by the Raspberry Pi + TPU.
  * The TpuSystem object requires a StringTopic, a topic found under the noteTable table, to read and decode.
- * This class analyzes the string and isolates key information about a detected note.
- * Using the information and some math, it calculates an estimated distance to the note in terms of X and Y (following FRC coordinates)
+ * TpuSystem goes through the list of notes and finds the most optimal note.
  * ------------------------------------------------------------------------------------------------------------------------------------ */
 
 package frc.team7520.robot.subsystems.swerve;
@@ -30,36 +29,18 @@ import java.util.List;
 
 public class TpuSystem {
   // the subscriber is an instance variable so its lifetime matches that of the class
-  final StringSubscriber NOTE_INFO;
-  private double xPos, yPos, height, width, confidence, area = -1;
-
-  /*
-   * Terminology being used here:
-   * Bottom - very bottom of the screen/stream being processed. Angle is 47.2° from horizontal
-   * Top - very top of the stream whose angle is near 0° to the horizontal, parallel to the ground
-   * Center - refered to both in terms right to left and top to bottom. In terms of top to bottom, center is located 23.2° from horizontal
-   */
-  final private double SCREEN_WIDTH  = 640; // A stream is constructed were (0,0) is the top left corner, and (640,480) is the bottom right
-  final private double SCREEN_HEIGHT = 480;
-  final private double X_DPP = 58 / SCREEN_WIDTH; // Degrees per pixel. Measured by 29° from center of screen to side
-  final private double Y_DPP = 0.1; // Degrees per pixel. Measured as bottom being 47.2° from the top horizontal. Top angle is therefore 0.8° above horiztonal
-  final private double CAM_HEIGHT = 0.6858; // In meters off the floor, AKA 27 inches. We assume the camera is located directly above robot center
-  final private double DISTANCE_AT_BOTTOM = 0.508; // In meters forward of center of robot, AKA 20 inches
-  final private double X_CENTER = SCREEN_WIDTH/2; // 320 pixel from the left side
-  private double relativeXDistance = 0; // Position of a note estimated from data receieved from NetworkTables. Follows FRC coordinates system
-  private double relativeYDistance = 0; // In meters
-
-  final private double YDISTANCE_OFFSET = 0.15; // In meters to the left. What is actually calculated as relativeYDistance is 0.15m off physical measurements
-  final private double XDISTANCE_REDUCTION = 0.4; // To prevent robot from running over note's location, stopping it in front of note in position for pick up
-
-  private Translation2d noteLocation;
+  private final StringSubscriber NOTE_INFO;
+  private final int MAXIMUM_CAPACITY = 10;
+  private int numNotes = 0;
+  private Note[] notes = new Note[MAXIMUM_CAPACITY];
+  private Note bestNote = null;
 
   /**
    * 
    * @param detection the StringTopic that gives a details of ONE note. Does not currently support multiple note detection.
    */
   public TpuSystem(StringTopic detection) {
-    NOTE_INFO = detection.subscribe("[{'x':None,'y':None,'w':None,'h':None,'conf':0}]");
+    NOTE_INFO = detection.subscribe("[]"); //[{'x':None,'y':None,'w':None,'h':None,'conf':0}]
   }
 
   /**
@@ -69,22 +50,14 @@ public class TpuSystem {
     // simple get of most recent value; if no value has been published,
     // returns the default value passed to the subscribe() function
     String val = NOTE_INFO.get();
-
-    boolean found = translateInfo(val);
-    if (found) {
-      area = width*height;
-      noteLocation = trigonemtricCalculatedDistance();
+    translateInfo(val);
+    if (!isEmpty()) {
+      determineBestNote();
     } else {
-      xPos = -1;
-      yPos = -1;
-      area = -1;
-      confidence = -1;
-      noteLocation = new Translation2d(0,0);
+      bestNote = null;
     }
 
-    SmartDashboard.putString("Coordinates", xPos + ", " + yPos);
-    SmartDashboard.putNumber("Area", area);
-    SmartDashboard.putNumber("Note C", confidence);
+    
   }
 
   /**
@@ -96,66 +69,122 @@ public class TpuSystem {
   }
 
   /**
-   * Reads the value suscribed off the NetworkTables for note detection by breaking a larger string into isolated values. Currently not able to read multiple note detection.
-   * @param value
-   * @return
+   * Reads a big string value, breaking it down into individual notes.
+   * @param value the String value from a topic
    */
-  private boolean translateInfo(String value) {
-    try {
-      if (value.charAt(6) == 'N') {
-        return false;
+  private void translateInfo(String value) {
+    try{
+      /* Remove all notes in list if no detections */
+      if (value.equals("[]")) {
+        while (removeLastNote());
+        return;           
       }
-        boolean firstInd = false;
-        int[] indexes = new int[10]; 
-        int count = 0;
 
-        for (int i = 0; i < value.length(); i++) {
-            char c = value.charAt(i);
-            if (c >= '0' && c <= '9' || c == '.') {
-                if (!firstInd) {
-                    firstInd = true;
-                    indexes[count] = i;
-                    count++;
-                }
-            } else {
-                if (firstInd) {
-                    firstInd = false;
-                    indexes[count] = i;
-                    count++;
-                }
-            }
+      /* If detections, seperate individual info of notes and update/make notes */
+      int[][] indexes = new int[MAXIMUM_CAPACITY][2]; // Each row is a note, a start and end index for a string
+      int row = 0;
+      for (int i = 0; i < value.length(); i++) {
+        char c = value.charAt(i);
+        if (c == '{') {
+          indexes[row][0] = i;
+        } else if (c == '}') {
+          indexes[row][1] = i;          
+          row++;
         }
+      }
 
-        xPos = Double.parseDouble(value.substring(indexes[0], indexes[1]));
-        yPos = Double.parseDouble(value.substring(indexes[2], indexes[3]));
-        height = Double.parseDouble(value.substring(indexes[4], indexes[5]));
-        width = Double.parseDouble(value.substring(indexes[6], indexes[7]));
-        confidence = Double.parseDouble(value.substring(indexes[8], indexes[9]));
-        return true;
+      /* if list has more notes that actually detected this current cycle... */
+      if (numNotes > row + 1) {
+        removeLastNote();
+      }
+
+      /* update or make a new note for each information set */
+      for (int i = 0; i < row+1; i++) {
+        if (notes[i] == null) {
+          boolean full = addNote(i, value.substring(indexes[row][0], indexes[row][1]+1));
+          if (full) {
+            System.out.println("TPU SYSTEM: THE NOTE LIST IS FULL!");
+          }
+        } else {
+          notes[i].periodic(value.substring(indexes[row][0], indexes[row][1]+1));
+        }
+      }
+
+
 
     } catch (NumberFormatException e) {
-        System.out.println("NUMBER FORMAT EXCEPTION");
-        return false;
+      System.out.println("TPU SYSTEM: NUMBER FORMAT EXCEPTION");
     } catch (IndexOutOfBoundsException e) {
-      System.out.println("INDEX OUT OF BOUNDS");
-      return false;
+      System.out.println("TPU SYSTEM: INDEX OUT OF BOUNDS");
     }
   }
 
   /**
-   * Uses found measurements and trigonometry to estimate the location of a note relative to the robot center
-   * @return a Translation2d of the note detected
+   * Sorts notes[] so that all null objects (AKA non existant) are at the back of list
    */
-  private Translation2d trigonemtricCalculatedDistance() {
-    relativeXDistance = CAM_HEIGHT/(Math.tan(Math.toRadians(yPos*Y_DPP)));
-    relativeYDistance = Math.hypot(relativeXDistance, CAM_HEIGHT)*Math.tan(Math.toRadians((X_CENTER-xPos)*(X_DPP)));
-    return new Translation2d(relativeXDistance - XDISTANCE_REDUCTION, relativeYDistance + YDISTANCE_OFFSET);
+  private void sortNull() {
+    for (int i = 0; i < numNotes; i++) {
+      if (notes[i] == null) {
+        notes[i] = notes[numNotes-1];
+        notes[numNotes-1] = null;
+      }
+    }
   }
 
-  public Translation2d getNoteLocation() {
-    if (noteLocation == null) {
+  /**
+   * Adds a note to the bottom of the list.
+   * @return <code>false</code> if the list capacity is full
+   */
+  private boolean addNote(int index, String segregatedInfo) {
+    if (numNotes == MAXIMUM_CAPACITY) {
+      return false;
+    }
+    notes[index] = new Note(segregatedInfo);
+    numNotes++;
+    //sortNull();
+    return true;
+  }
+
+  /**
+   * Removes the note at the bottom of the list when that note is no longer detected. If the note that disappeared was not
+   * at the bottom of the list, udpate another note with required information as substitute.
+   * @return a boolean indicating whether the removal was successful
+   */
+  private boolean removeLastNote() {
+    if (isEmpty()) {
+      return false;
+    }
+    notes[numNotes-1] = null;
+    numNotes--;
+    //sortNull();
+    return true;
+  }
+
+  /**
+   * Determines the best note according to which note has the best score
+   */
+  private void determineBestNote() {
+    if (isEmpty()) {
+      bestNote = null;
+      return;
+    }
+    bestNote = notes[0];
+    for (int i = 0; i < numNotes; i++) {
+      bestNote = bestNote.compareNoteScore(notes[i]);
+    }
+  }
+
+  private boolean isEmpty() {
+    return numNotes == 0;
+  }
+  
+  /**
+   * @return the Translation2d location of the best note
+   */
+  public Translation2d getBestNoteLocation() {
+    if (isEmpty()) {
       return new Translation2d(0,0);
     }
-    return noteLocation;
+    return bestNote.getLocation();
   }
 }
