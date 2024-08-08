@@ -1,8 +1,10 @@
 /* ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  * Robin Yan
  * 08/07/2024
- * A class that represents a note. It contains basic information of the note translated from NetworkTables.
+ * A class that represents a note. It contains the basic a information of the note translated from NetworkTables.
  * Using the provided information and some math, it calculates an estimated distance to the note in terms of X and Y (following FRC coordinates)
+ * Each note is equipped with a "score" indicating whether or not the note in question is the best option to go for when multiple notes are detected.
+ * A score of note is dependent on their area (major effect) and confidence level (minor effect).
  * ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ */
 
 package frc.team7520.robot.subsystems.swerve;
@@ -42,33 +44,47 @@ public class Note {
     final static private double YDISTANCE_OFFSET = 0.15; // In meters to the left. What is actually calculated as relativeYDistance is 0.15m off physical measurements
     final static private double XDISTANCE_REDUCTION = 0.4; // To prevent robot from running over note's location, stopping it in front of note in position for pick up
 
-    final static private double CONFIDENCE_WEIGHT_FACTOR = 0;
-    final static private double AREA_WEIGHT_FACTOR = 1;
+    final static private double CONFIDENCE_WEIGHT_FACTOR = 10;
+    final static private double AREA_WEIGHT_FACTOR = 0.001;
 
+    /* Information from NT */
     private double xPos;
     private double yPos;
     private double width;
     private double height;
     private double confidence;
 
+    /* Estimated details */
     private double relativeXDistance = 0; // Position of a note estimated from data receieved from NetworkTables. Follows FRC coordinates system
     private double relativeYDistance = 0; // In meters
     private Translation2d noteLocation;
 
     private double score = 0;
 
+    /**
+     * Create a new Note object
+     * @param stringInfo the String containing a note's coordinates, dimensions, and confidence level. Must be in the form: "[{'x':0,'y':0,'h':0,'w':0,'conf':0}]"
+     */
     public Note(String stringInfo) {
         periodic(stringInfo);
     }
 
+    /**
+     * Updates the note object with up-to-date information
+     * @param stringInfo
+     */
     public void periodic(String stringInfo) {
-        translateInfo(stringInfo);
-        trigonemtricCalculatedDistance();
-        updateScore();
+        if (translateInfo(stringInfo)) {
+            noteLocation = trigonemtricCalculatedDistance();
+            updateScore();
+        }
+        
+        
     }
 
     /**
-     * Reads the value of a string containg information of a note and breaking it into isolated values. This method assumes that the given string has no errors.
+     * Reads the value of a string containg information of a note and breaking it into isolated values. This method assumes that the given string has no errors and
+     * comes in the following format: "[{'x':0,'y':0,'h':0,'w':0,'conf':0}]"
      * @param value the String information
      * @return <code>true</code> if info update was successful
      */
@@ -112,7 +128,8 @@ public class Note {
     }
 
     /**
-     * Uses found measurements and trigonometry to estimate the location of a note relative to the robot center
+     * Uses physical and retrieved measurements and trigonometry to estimate the location of a note relative to the robot center.
+     * View the team drive for details about the math: https://drive.google.com/drive/folders/1zDrigwM__K0zThnreSJkRGCgeL3lPyoZ
      * @return a Translation2d of the note detected
      */
     private Translation2d trigonemtricCalculatedDistance() {
@@ -157,6 +174,14 @@ public class Note {
 
     public double getConfidence() {
         return confidence;
+    }
+
+    public String toString() {
+        return "Note Confidence: " + confidence;
+    }
+
+    public double getScore() {
+        return score;
     }
     
 }

@@ -269,8 +269,8 @@ public class SwerveSubsystem extends SubsystemBase {
             Transform3d measurement = target.getBestCameraToTarget();
             vectorCalculatedDistance(measurement);
             
-            SmartDashboard.putNumber("X", measurement.getX());
-            SmartDashboard.putNumber("Y", measurement.getY());
+            //SmartDashboard.putNumber("X", measurement.getX());
+            //SmartDashboard.putNumber("Y", measurement.getY());
         }
 
         /** Note Detection Stuff */
@@ -282,11 +282,11 @@ public class SwerveSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Y Distance To Note", relativeNoteLocation.getY());
 
         /** For april tag detection */
-        SmartDashboard.putNumber("Rotation", swerveDrive.getPose().getRotation().getDegrees());
-        SmartDashboard.putBoolean("Detected!", hasTargets);
-        SmartDashboard.putNumber("Tag X", xdistance);
-        SmartDashboard.putNumber("Tag Y", ydistance);
-        SmartDashboard.putNumber("Yaw", yaw);
+        //SmartDashboard.putNumber("Rotation", swerveDrive.getPose().getRotation().getDegrees());
+        //SmartDashboard.putBoolean("Detected!", hasTargets);
+        //SmartDashboard.putNumber("Tag X", xdistance);
+        //SmartDashboard.putNumber("Tag Y", ydistance);
+        //SmartDashboard.putNumber("Yaw", yaw);
     }
 
     /**
@@ -322,7 +322,7 @@ public class SwerveSubsystem extends SubsystemBase {
         // What if we analyzed component paths as 2d vectors using translation2d?
         Translation2d relativeVector = new Translation2d(measurement.getX(), measurement.getY());
         Translation2d absoluteVector = new Translation2d(relativeVector.getNorm(), new Rotation2d(getHeading().getRadians() + relativeVector.getAngle().getRadians()));
-        SmartDashboard.putNumber("Distance To Target", relativeVector.getNorm());
+        //SmartDashboard.putNumber("Distance To Target", relativeVector.getNorm());
         xdistance = absoluteVector.getX();
         ydistance = absoluteVector.getY();
     }
@@ -338,7 +338,7 @@ public class SwerveSubsystem extends SubsystemBase {
     public void vectorCalculatedDistance(Translation2d relativeVector) {
         // What if we analyzed component paths as 2d vectors using translation2d?
         Translation2d absoluteVector = new Translation2d(relativeVector.getNorm(), new Rotation2d(getHeading().getRadians() + relativeVector.getAngle().getRadians()));
-        SmartDashboard.putNumber("Absolute Distance to Note", relativeVector.getNorm());
+        //SmartDashboard.putNumber("Absolute Distance to Note", relativeVector.getNorm());
         xdistance = absoluteVector.getX();
         ydistance = absoluteVector.getY();
     }

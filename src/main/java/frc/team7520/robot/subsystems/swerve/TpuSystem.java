@@ -3,8 +3,9 @@
  * Robin Yan
  * 08/02/2024
  * A class used to represent a list of detections from the NetworkTables published by the Raspberry Pi + TPU.
- * The TpuSystem object requires a StringTopic, a topic found under the noteTable table, to read and decode.
- * TpuSystem goes through the list of notes and finds the most optimal note.
+ * The TpuSystem reads a StringTopic and divides it into individual note information (also as a string).
+ * A Note object is created when a new detection is found, and vice versa for removal. Note objects are continously updated if detected.
+ * Using the compareScore method of the Note class, TpuSystem determines the most optimal note and its location.
  * ------------------------------------------------------------------------------------------------------------------------------------ */
 
 package frc.team7520.robot.subsystems.swerve;
@@ -36,7 +37,7 @@ public class TpuSystem {
   private Note bestNote = null;
 
   /**
-   * 
+   * Makes a new TpuSystem. A TpuSystem can be understood as a list of notes/detections, as determined by information foudn in a the String passed through NT
    * @param detection the StringTopic that gives a details of ONE note. Does not currently support multiple note detection.
    */
   public TpuSystem(StringTopic detection) {
@@ -44,7 +45,7 @@ public class TpuSystem {
   }
 
   /**
-   * Periodically checks if a note is detected
+   * Periodically checks if notes are detected
    */
   public void periodic() {
     // simple get of most recent value; if no value has been published,
@@ -56,8 +57,7 @@ public class TpuSystem {
     } else {
       bestNote = null;
     }
-
-    
+    printAllScore();
   }
 
   /**
@@ -75,21 +75,21 @@ public class TpuSystem {
   private void translateInfo(String value) {
     try{
       /* Remove all notes in list if no detections */
-      if (value.equals("[]")) {
+      if (value.equals("\"[]\"")) {
         while (removeLastNote());
         return;           
       }
 
       /* If detections, seperate individual info of notes and update/make notes */
-      int[][] indexes = new int[MAXIMUM_CAPACITY][2]; // Each row is a note, a start and end index for a string
-      int row = 0;
+      int[][] indexes = new int[MAXIMUM_CAPACITY][2]; // Each row is a note, a row containing a start and end index for a string
+      int row = -1;
       for (int i = 0; i < value.length(); i++) {
         char c = value.charAt(i);
         if (c == '{') {
+          row++;
           indexes[row][0] = i;
         } else if (c == '}') {
-          indexes[row][1] = i;          
-          row++;
+          indexes[row][1] = i;     
         }
       }
 
@@ -100,17 +100,16 @@ public class TpuSystem {
 
       /* update or make a new note for each information set */
       for (int i = 0; i < row+1; i++) {
+        String subValue = value.substring(indexes[i][0], indexes[i][1]+1);
         if (notes[i] == null) {
-          boolean full = addNote(i, value.substring(indexes[row][0], indexes[row][1]+1));
-          if (full) {
+          boolean added = addNote(i, subValue);
+          if (!added) {
             System.out.println("TPU SYSTEM: THE NOTE LIST IS FULL!");
           }
         } else {
-          notes[i].periodic(value.substring(indexes[row][0], indexes[row][1]+1));
+          notes[i].periodic(subValue);
         }
       }
-
-
 
     } catch (NumberFormatException e) {
       System.out.println("TPU SYSTEM: NUMBER FORMAT EXCEPTION");
@@ -120,7 +119,8 @@ public class TpuSystem {
   }
 
   /**
-   * Sorts notes[] so that all null objects (AKA non existant) are at the back of list
+   * Sorts notes[] so that all null objects (AKA non existant) are at the back of list.
+   * Not currently required since insertion/removal of objects always occurs at end of list
    */
   private void sortNull() {
     for (int i = 0; i < numNotes; i++) {
@@ -141,7 +141,6 @@ public class TpuSystem {
     }
     notes[index] = new Note(segregatedInfo);
     numNotes++;
-    //sortNull();
     return true;
   }
 
@@ -156,7 +155,6 @@ public class TpuSystem {
     }
     notes[numNotes-1] = null;
     numNotes--;
-    //sortNull();
     return true;
   }
 
@@ -174,6 +172,10 @@ public class TpuSystem {
     }
   }
 
+  /**
+   * Checks if the list has any notes or not
+   * @return if the list is empty
+   */
   private boolean isEmpty() {
     return numNotes == 0;
   }
@@ -186,5 +188,16 @@ public class TpuSystem {
       return new Translation2d(0,0);
     }
     return bestNote.getLocation();
+  }
+
+  /**
+   * Prints all scores of all currently detected notes. Does not identify which score is for which note
+   */
+  private void printAllScore() {
+    String s = "";
+    for (int i = 0; i < numNotes; i++) {
+      s += notes[i].getScore() + ", ";       
+    }
+    System.out.println(s);
   }
 }
