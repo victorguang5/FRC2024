@@ -257,6 +257,8 @@ public class RobotContainer
         new JoystickButton(driverController, XboxController.Button.kB.value)
                 .onTrue(new InstantCommand(drivebase::resetOdometry));
 
+        
+
         /* // Items are not working as intended and are overriding the important led indication of having a note, GREEN
         
         new Trigger(() -> intake.currPosition == Position.INTAKE)
@@ -275,9 +277,16 @@ public class RobotContainer
                 .onTrue(LEDSubsystem.idle());
         // Should be reversed because light switch is default false
         //Robin's on-the-fly movement
+      
+        // new JoystickButton(driverController, XboxController.Button.kY.value)
+        //         .onTrue(new InstantCommand(() -> {
+        //                 var cmd = AutoBuilder.followPath(drivebase.robinPath());
+        //                 cmd.schedule();}
+        //                 ));
+
         new JoystickButton(driverController, XboxController.Button.kY.value)
                 .onTrue(new InstantCommand(() -> {
-                        var cmd = AutoBuilder.followPath(drivebase.robinPath());
+                        var cmd = AutoBuilder.followPath(drivebase.SeanOTFPath());
                         cmd.schedule();}
                         ));
     }

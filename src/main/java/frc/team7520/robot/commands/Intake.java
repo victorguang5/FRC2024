@@ -52,7 +52,7 @@ public class Intake extends Command {
             return;
         }
         if (shootSup.getAsBoolean() && currPosition == Constants.IntakeConstants.Position.INTAKE) {
-            intakeSubsystem.setSpeed(Constants.IntakeConstants.Position.INTAKE.getSpeed(), false);
+            intakeSubsystem.setSpeed(-Constants.IntakeConstants.Position.INTAKE.getSpeed(), false);
             return;
         }
         if(reverseSup.getAsBoolean()) {
