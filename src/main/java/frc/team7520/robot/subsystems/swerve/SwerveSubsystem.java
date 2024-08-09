@@ -5,10 +5,14 @@
 package frc.team7520.robot.subsystems.swerve;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.FollowPathHolonomic;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.ConstraintsZone;
+import com.pathplanner.lib.path.EventMarker;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.RotationTarget;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
@@ -17,6 +21,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.Trajectory;
@@ -25,9 +30,13 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.networktables.*;
 import frc.team7520.robot.Constants;
+import frc.team7520.robot.Constants.IntakeConstants.Position;
+import frc.team7520.robot.auto.AutoIntake;
+import frc.team7520.robot.subsystems.intake.IntakeSubsystem;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveMath;
@@ -38,6 +47,7 @@ import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 
 // to reinstall lib, use https://maven.photonvision.org/repository/internal/org/photonvision/photonlib-json/1.0/photonlib-json-1.0.json
@@ -165,6 +175,8 @@ public class SwerveSubsystem extends SubsystemBase {
                 this // Reference to this subsystem to set requirements
         );
     }
+
+    
 
     /**
      * Get the path follower with events.
@@ -595,4 +607,49 @@ public class SwerveSubsystem extends SubsystemBase {
         return path;
     }
 
+    public PathPlannerPath SeanOTFPath() {
+        // TpuSystem tpusystem = new TpuSystem();
+
+        // Translation2d translate = Note.getLocation();
+        double x = getPose().getX();
+        double y = getPose().getY();
+        double direction = getHeading().getDegrees();
+
+        IntakeSubsystem intakeSubsystem = IntakeSubsystem.getInstance();
+        List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
+            getPose(), 
+            new Pose2d(x + xdistance, y + ydistance, Rotation2d.fromDegrees(direction))
+        );
+
+        List<Translation2d> bezierPoints2 = PathPlannerPath.bezierFromPoses(
+            new Pose2d(0, 0, Rotation2d.fromDegrees(0)),
+            new Pose2d(2, 0, Rotation2d.fromDegrees(0))
+        );
+
+        EventMarker em = new EventMarker(0, new AutoIntake(Position.INTAKE));
+        EventMarker em2 = new EventMarker(0, new InstantCommand(() -> intakeSubsystem.setSpeed(Position.INTAKE.getSpeed())));
+        EventMarker em3 = new EventMarker(0.8, new AutoIntake(Position.SHOOT));
+        EventMarker em4 = new EventMarker(0.8, new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
+        List<EventMarker> lst_em = Arrays.asList(em, em2, em3, em4);
+       
+        RotationTarget rt = new RotationTarget(1, Rotation2d.fromDegrees(0), true);
+        List<RotationTarget> lst_rt = Arrays.asList();
+        
+        ConstraintsZone cz = new ConstraintsZone(0.3, 0.6, new PathConstraints(0.05, 0.5, 0.5 * Math.PI, 0.5 * Math.PI));
+        List<ConstraintsZone> lst_cz = Arrays.asList();
+
+        PathPlannerPath path = new PathPlannerPath(
+            bezierPoints,
+            lst_rt,
+            lst_cz,
+            lst_em,
+            new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI),
+            new GoalEndState(0.0, Rotation2d.fromDegrees(direction)),
+            false
+        );
+
+        path.preventFlipping = true;
+
+        return path;
+    }
 }
