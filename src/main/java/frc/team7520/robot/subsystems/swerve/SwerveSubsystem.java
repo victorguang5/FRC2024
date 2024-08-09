@@ -607,7 +607,7 @@ public class SwerveSubsystem extends SubsystemBase {
         return path;
     }
 
-    public PathPlannerPath SeanOTFPath() {
+    public PathPlannerPath seanOTFPath() {
         // TpuSystem tpusystem = new TpuSystem();
 
         // Translation2d translate = Note.getLocation();

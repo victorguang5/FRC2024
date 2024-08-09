@@ -29,6 +29,7 @@ import frc.team7520.robot.Constants.OperatorConstants;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.team7520.robot.auto.AutoIntake;
+import frc.team7520.robot.auto.AutoNotePickUp;
 import frc.team7520.robot.auto.AutoShoot;
 import frc.team7520.robot.auto.ShootSequence;
 import frc.team7520.robot.commands.AbsoluteDrive;
@@ -275,20 +276,24 @@ public class RobotContainer
         new Trigger(intakeSubsystem::getSwitchVal)
                 .whileFalse(new RepeatCommand(LEDSubsystem.noteIn()))
                 .onTrue(LEDSubsystem.idle());
-        // Should be reversed because light switch is default false
-        //Robin's on-the-fly movement
-      
+        
+        /* OTF Path simple testing */
         // new JoystickButton(driverController, XboxController.Button.kY.value)
         //         .onTrue(new InstantCommand(() -> {
         //                 var cmd = AutoBuilder.followPath(drivebase.robinPath());
         //                 cmd.schedule();}
         //                 ));
 
+        /* OTF Path with timed event markers */
+        // new JoystickButton(driverController, XboxController.Button.kY.value)
+        //         .onTrue(new InstantCommand(() -> {
+        //                 var cmd = AutoBuilder.followPath(drivebase.seanOTFPath());
+        //                 cmd.schedule();}
+        //                 ));
+
+        /* OTF Path using sensor feedback */
         new JoystickButton(driverController, XboxController.Button.kY.value)
-                .onTrue(new InstantCommand(() -> {
-                        var cmd = AutoBuilder.followPath(drivebase.SeanOTFPath());
-                        cmd.schedule();}
-                        ));
+                .onTrue(notePickUp());
     }
 
 
@@ -320,6 +325,20 @@ public class RobotContainer
         return AutoBuilder.followPath(path);
         */
         
+    }
+
+    /**
+     * Runs OTF path to note and full intake sequence using sensor in parallel deadline (path is deadline)
+     * @return the command for autoNotePickUp
+     */
+    public Command notePickUp() {
+        return new ParallelDeadlineGroup(
+                new InstantCommand(() -> {
+                        var cmd = AutoBuilder.followPath(drivebase.robinPath());
+                        cmd.schedule();                
+                }), 
+                new AutoNotePickUp()
+        );
     }
 
     public void teleOpInit() {
