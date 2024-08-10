@@ -59,7 +59,7 @@ public class Note {
     private double relativeXDistance = 0; // Position of a note estimated from data receieved from NetworkTables. Follows FRC coordinates system
     private double relativeYDistance = 0; // In meters
     private Translation2d noteLocation;
-
+    private double angleToApproach = 0; // CHange in degrees for which way the robot heading should be when approaching
     private double score = 0;
 
     /**
@@ -134,8 +134,9 @@ public class Note {
      * @return a Translation2d of the note detected
      */
     private Translation2d trigonemtricCalculatedDistance() {
+        angleToApproach = (X_CENTER-xPos)*(X_DPP);
         relativeXDistance = CAM_HEIGHT/(Math.tan(Math.toRadians(yPos*Y_DPP)));
-        relativeYDistance = Math.hypot(relativeXDistance, CAM_HEIGHT)*Math.tan(Math.toRadians((X_CENTER-xPos)*(X_DPP)));
+        relativeYDistance = Math.hypot(relativeXDistance, CAM_HEIGHT)*Math.tan(Math.toRadians(angleToApproach));
         return new Translation2d(relativeXDistance - XDISTANCE_REDUCTION, relativeYDistance + YDISTANCE_OFFSET);
     }
 
@@ -186,6 +187,10 @@ public class Note {
 
     public double getScore() {
         return score;
+    }
+
+    public double getAngleToApporach() {
+        return angleToApproach;
     }
     
 }

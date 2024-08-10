@@ -231,7 +231,7 @@ public class RobotContainer
         NamedCommands.registerCommand("stopIntaking", new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
         NamedCommands.registerCommand("intakeIn", new AutoIntake(Position.SHOOT));
         NamedCommands.registerCommand("stopShoot", new AutoShoot(0, false));
-
+        NamedCommands.registerCommand("AutoNotePickUp", new AutoNotePickUp());
 
     }
 
@@ -294,6 +294,7 @@ public class RobotContainer
         /* OTF Path using sensor feedback */
         new JoystickButton(driverController, XboxController.Button.kY.value)
                 .onTrue(notePickUp());
+                //.onTrue(new AutoNotePickUp());
     }
 
 
@@ -328,10 +329,23 @@ public class RobotContainer
     }
 
     /**
-     * Runs OTF path to note and full intake sequence using sensor in parallel deadline (path is deadline)
+     * Runs OTF path to note and full intake sequence using sensor in parallel
      * @return the command for autoNotePickUp
      */
     public Command notePickUp() {
+        //return new SequentialCommandGroup(
+                //return new ParallelCommandGroup(
+                        return new InstantCommand(() -> {
+                                var cmd = AutoBuilder.followPath(drivebase.seanOTFPath());
+                                cmd.schedule();                
+                        }); 
+                        //new AutoNotePickUp()); 
+                //new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(0)),
+                //new AutoIntake(Constants.IntakeConstants.Position.SHOOT)
+        //);
+    }
+
+    public Command automaticShoot() {
         return new ParallelDeadlineGroup(
                 new InstantCommand(() -> {
                         var cmd = AutoBuilder.followPath(drivebase.robinPath());
