@@ -43,9 +43,10 @@ public class Note {
     final static private double X_CENTER = SCREEN_WIDTH/2; // 320 pixel from the left side
     final static private double YDISTANCE_OFFSET = 0.15; // In meters to the left. What is actually calculated as relativeYDistance is 0.15m off physical measurements
     final static private double XDISTANCE_REDUCTION = 0.4; // To prevent robot from running over note's location, stopping it in front of note in position for pick up
-
+    final static private double MAXIMUM_ACCEPTED_RANGE = 3; // In meters
     final static private double CONFIDENCE_WEIGHT_FACTOR = 10;
     final static private double AREA_WEIGHT_FACTOR = 0.001;
+    final static private double RANGE_WEIGHT_FACTOR = 0; // Add points if inside accepted range
 
     /* Information from NT */
     private double xPos;
@@ -58,7 +59,7 @@ public class Note {
     private double relativeXDistance = 0; // Position of a note estimated from data receieved from NetworkTables. Follows FRC coordinates system
     private double relativeYDistance = 0; // In meters
     private Translation2d noteLocation;
-
+    private double angleToApproach = 0; // CHange in degrees for which way the robot heading should be when approaching
     private double score = 0;
 
     /**
@@ -133,8 +134,9 @@ public class Note {
      * @return a Translation2d of the note detected
      */
     private Translation2d trigonemtricCalculatedDistance() {
+        angleToApproach = (X_CENTER-xPos)*(X_DPP);
         relativeXDistance = CAM_HEIGHT/(Math.tan(Math.toRadians(yPos*Y_DPP)));
-        relativeYDistance = Math.hypot(relativeXDistance, CAM_HEIGHT)*Math.tan(Math.toRadians((X_CENTER-xPos)*(X_DPP)));
+        relativeYDistance = Math.hypot(relativeXDistance, CAM_HEIGHT)*Math.tan(Math.toRadians(angleToApproach));
         return new Translation2d(relativeXDistance - XDISTANCE_REDUCTION, relativeYDistance + YDISTANCE_OFFSET);
     }
 
@@ -143,6 +145,9 @@ public class Note {
      */
     private void updateScore() {
         score = confidence*CONFIDENCE_WEIGHT_FACTOR + width*height*AREA_WEIGHT_FACTOR;
+        if (relativeXDistance > MAXIMUM_ACCEPTED_RANGE) {
+            score *= RANGE_WEIGHT_FACTOR;
+        }
     }
 
     /**
@@ -182,6 +187,10 @@ public class Note {
 
     public double getScore() {
         return score;
+    }
+
+    public double getAngleToApporach() {
+        return angleToApproach;
     }
     
 }

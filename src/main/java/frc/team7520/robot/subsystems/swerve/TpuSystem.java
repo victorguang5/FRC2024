@@ -170,6 +170,9 @@ public class TpuSystem {
     for (int i = 0; i < numNotes; i++) {
       bestNote = bestNote.compareNoteScore(notes[i]);
     }
+    if (bestNote.getScore() < 1) {
+      bestNote = null;
+    }
   }
 
   /**
@@ -184,10 +187,17 @@ public class TpuSystem {
    * @return the Translation2d location of the best note
    */
   public Translation2d getBestNoteLocation() {
-    if (isEmpty()) {
+    if (bestNote == null) {
       return new Translation2d(0,0);
     }
     return bestNote.getLocation();
+  }
+
+  public double getBestNoteAngleToApproach() {
+    if (bestNote == null) {
+      return 0;
+    }
+    return bestNote.getAngleToApporach();
   }
 
   /**

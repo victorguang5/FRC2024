@@ -36,6 +36,7 @@ import edu.wpi.first.networktables.*;
 import frc.team7520.robot.Constants;
 import frc.team7520.robot.Constants.IntakeConstants.Position;
 import frc.team7520.robot.auto.AutoIntake;
+import frc.team7520.robot.auto.AutoNotePickUp;
 import frc.team7520.robot.subsystems.intake.IntakeSubsystem;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
@@ -607,7 +608,33 @@ public class SwerveSubsystem extends SubsystemBase {
         return path;
     }
 
-    public PathPlannerPath SeanOTFPath() {
+    /**
+     * Creates a path to the given destination. The rotational aspect of destination is the end goal state direction
+     * @param destination a Pose2d
+     * @param startBezier
+     * @param endBezier
+     * @return a path
+     */
+    public PathPlannerPath customPath(Pose2d destination, Rotation2d startBezier, Rotation2d endBezier) {        
+        List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
+            new Pose2d(getPose().getX(), getPose().getY(), startBezier), 
+            new Pose2d(destination.getX(), destination.getY(), endBezier) 
+        );
+
+        // Create the path using the bezier points created above
+        PathPlannerPath path = new PathPlannerPath(
+            bezierPoints,
+            new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI), //Global constraints
+            new GoalEndState(0.0, destination.getRotation()) //End with in the same direction as when the robot was facing when the path started
+        );
+
+        // Prevent the path from being flipped if the coordinates are already correct
+        path.preventFlipping =true;
+
+        return path;
+    }
+
+    public PathPlannerPath seanOTFPath() {
         // TpuSystem tpusystem = new TpuSystem();
 
         // Translation2d translate = Note.getLocation();
@@ -616,40 +643,60 @@ public class SwerveSubsystem extends SubsystemBase {
         double direction = getHeading().getDegrees();
 
         IntakeSubsystem intakeSubsystem = IntakeSubsystem.getInstance();
-        List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
-            getPose(), 
-            new Pose2d(x + xdistance, y + ydistance, Rotation2d.fromDegrees(direction))
-        );
 
-        List<Translation2d> bezierPoints2 = PathPlannerPath.bezierFromPoses(
-            new Pose2d(0, 0, Rotation2d.fromDegrees(0)),
-            new Pose2d(2, 0, Rotation2d.fromDegrees(0))
-        );
+        if (xdistance != 0 && ydistance !=0) {
+            List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
+                getPose(), 
+                new Pose2d(x + xdistance, y + ydistance, Rotation2d.fromDegrees(direction + tpu.getBestNoteAngleToApproach()))
+            );
 
-        EventMarker em = new EventMarker(0, new AutoIntake(Position.INTAKE));
-        EventMarker em2 = new EventMarker(0, new InstantCommand(() -> intakeSubsystem.setSpeed(Position.INTAKE.getSpeed())));
-        EventMarker em3 = new EventMarker(0.8, new AutoIntake(Position.SHOOT));
-        EventMarker em4 = new EventMarker(0.8, new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
-        List<EventMarker> lst_em = Arrays.asList(em, em2, em3, em4);
-       
-        RotationTarget rt = new RotationTarget(1, Rotation2d.fromDegrees(0), true);
-        List<RotationTarget> lst_rt = Arrays.asList();
+            List<Translation2d> bezierPoints2 = PathPlannerPath.bezierFromPoses(
+                new Pose2d(0, 0, Rotation2d.fromDegrees(0)),
+                new Pose2d(2, 0, Rotation2d.fromDegrees(0))
+            );
+
+            EventMarker em = new EventMarker(0, new AutoNotePickUp());
+            //EventMarker em2 = new EventMarker(0, new InstantCommand(() -> intakeSubsystem.setSpeed(Position.INTAKE.getSpeed())));
+            EventMarker em3 = new EventMarker(1, new AutoIntake(Position.SHOOT));
+            EventMarker em4 = new EventMarker(1, new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
+            List<EventMarker> lst_em = Arrays.asList(em, em3, em4);
         
-        ConstraintsZone cz = new ConstraintsZone(0.3, 0.6, new PathConstraints(0.05, 0.5, 0.5 * Math.PI, 0.5 * Math.PI));
-        List<ConstraintsZone> lst_cz = Arrays.asList();
+            RotationTarget rt = new RotationTarget(0.5, Rotation2d.fromDegrees(direction + tpu.getBestNoteAngleToApproach()));
+            List<RotationTarget> lst_rt = Arrays.asList(rt);
+            
+            ConstraintsZone cz = new ConstraintsZone(0.3, 0.6, new PathConstraints(0.05, 0.5, 0.5 * Math.PI, 0.5 * Math.PI));
+            List<ConstraintsZone> lst_cz = Arrays.asList();
 
-        PathPlannerPath path = new PathPlannerPath(
-            bezierPoints,
-            lst_rt,
-            lst_cz,
-            lst_em,
-            new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI),
-            new GoalEndState(0.0, Rotation2d.fromDegrees(direction)),
-            false
-        );
+            PathPlannerPath path = new PathPlannerPath(
+                bezierPoints,
+                lst_rt,
+                lst_cz,
+                lst_em,
+                new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI),
+                new GoalEndState(0.0, Rotation2d.fromDegrees(direction + tpu.getBestNoteAngleToApproach())),
+                false
+            );
 
-        path.preventFlipping = true;
+            path.preventFlipping = true;
+            return path;
 
-        return path;
+        } else {
+            List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
+                getPose(), //The Path starts at the position of the robot currently, but first move towards the direction it was facing before it curves to end point. As such, different diretions will give different curves to end point
+                new Pose2d(x + 0.1, y, Rotation2d.fromDegrees(direction)) //The end point +1 meter in the x direction and +1 meter in the y direction. Enter the end point with THE PATH FACING 0 degrees
+            );
+
+            // Create the path using the bezier points created above
+            PathPlannerPath path = new PathPlannerPath(
+                bezierPoints,
+                new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI), //Global constraints
+                new GoalEndState(0.0, Rotation2d.fromDegrees(direction)) //End with in the same direction as when the robot was facing when the path started
+            );
+
+            // Prevent the path from being flipped if the coordinates are already correct
+            path.preventFlipping =true;
+
+            return path;
+        }
     }
 }
