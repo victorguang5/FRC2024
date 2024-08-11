@@ -26,6 +26,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Counter;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -37,6 +38,7 @@ import frc.team7520.robot.Constants;
 import frc.team7520.robot.Constants.IntakeConstants.Position;
 import frc.team7520.robot.auto.AutoIntake;
 import frc.team7520.robot.auto.AutoNotePickUp;
+import frc.team7520.robot.auto.AutoShoot;
 import frc.team7520.robot.auto.ShootSequence;
 import frc.team7520.robot.subsystems.intake.IntakeSubsystem;
 import frc.team7520.robot.util.AprilTagSystem;
@@ -76,8 +78,8 @@ public class SwerveSubsystem extends SubsystemBase {
     /**
      * Camera for photon
      */
-    public AprilTagSystem aprilTagSystem = new AprilTagSystem("");
-
+    public AprilTagSystem aprilTagSystem = new AprilTagSystem("Arducam_OV9281_USB_Camera");
+    int counter = 0;
     
     public double xdistanceNote, ydistanceNote = 0;
     
@@ -287,10 +289,16 @@ public class SwerveSubsystem extends SubsystemBase {
         
         if (aprilTagSystem.initiateAprilTagLayout()) {
             Pose2d updatedPose = aprilTagSystem.getCurrentRobotFieldPose();
-            if (updatedPose != null) {
+            if (updatedPose != null && counter > 20) {
+                counter = 0;
                 addVisionReading(updatedPose);
+                System.out.println(updatedPose.getX() + " " + updatedPose.getY() + " " + updatedPose.getRotation().getDegrees());
+            } else {
+                //System.out.println(counter);
+                counter++;
             }
         }
+        //System.out.println(getPose().getX() + " " + getPose().getY() + " " + getPose().getRotation().getDegrees());
         aprilTagSystem.periodic(getPose());
 
         /** Note Detection Stuff */
@@ -672,11 +680,12 @@ public class SwerveSubsystem extends SubsystemBase {
             if (true) { // Change the argument to whether you are in range for the position using Map
                 List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
                     getPose(), 
-                    new Pose2d(0.5, 0, Rotation2d.fromDegrees(-direction)) 
+                    new Pose2d(x+0.5, y, Rotation2d.fromDegrees(-direction)) 
                 );
 
-                EventMarker em = new EventMarker(0.9, new ShootSequence());
-                List<EventMarker> lst_em = Arrays.asList(em);
+                EventMarker em = new EventMarker(0.9, new InstantCommand(() -> intakeSubsystem.setSpeed(1)));
+                EventMarker em2 = new EventMarker(0.8, new AutoShoot(1, false));
+                List<EventMarker> lst_em = Arrays.asList(em, em2);
             
                 //RotationTarget rt = new RotationTarget(0.5, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()));
                 List<RotationTarget> lst_rt = Arrays.asList();

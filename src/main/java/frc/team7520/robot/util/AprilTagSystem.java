@@ -52,6 +52,7 @@ public class AprilTagSystem {
     private AprilTagFieldLayout aprilTagFieldLayout;
     private List<AprilTag> apriltags;
     private boolean aprilTagLayoutLoaded = false;
+    private final double MAX_RANGE = 2; //In meters, anything beyond 2 meters should not be used
     
     private Pose2d robotPose;
     private AprilTag closestTag;
@@ -96,7 +97,7 @@ public class AprilTagSystem {
 
     public void periodic(Pose2d robotPose) {
         this.robotPose = robotPose;
-        System.out.println(apriltags.size());
+        //System.out.println(aprilTagLayoutLoaded);
     }
 
     /** 
@@ -125,11 +126,11 @@ public class AprilTagSystem {
     public Pose2d getCurrentRobotFieldPose() {
         var result = camera.getLatestResult();
         // robot center relative to camera x, y, z
-        double CAMERA_POS_FOR_ROBOT_X = 0.127; // Meters
-        double CAMERA_POS_FOR_ROBOT_Y = -0.1651;
+        double CAMERA_POS_FOR_ROBOT_X = 0.254; // Meters
+        double CAMERA_POS_FOR_ROBOT_Y = -0.0127;
         double CAMERA_POS_FOR_ROBOT_Z = -0.6858;
         double CAMERA_POS_FOR_ROBOT_ROLL = 0;
-        double CAMERA_POS_FOR_ROBOT_PITCH = -0.5236; // Radians
+        double CAMERA_POS_FOR_ROBOT_PITCH = Math.toRadians(37); // Radians
         double CAMERA_POS_FOR_ROBOT_YAW = Math.PI;
 
         Transform3d cameraToRobot = new Transform3d(CAMERA_POS_FOR_ROBOT_X, 
