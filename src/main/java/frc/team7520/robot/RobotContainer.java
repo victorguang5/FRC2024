@@ -47,6 +47,7 @@ import frc.team7520.robot.subsystems.shooter.ShooterSubsystem;
 import frc.team7520.robot.subsystems.swerve.SwerveSubsystem;
 
 import java.io.File;
+import java.util.function.BooleanSupplier;
 
 //Temporary Imports BY RObin
 import com.pathplanner.lib.path.PathPlannerPath;
@@ -71,6 +72,7 @@ public class RobotContainer
 
         //"Detections" supplies all notes detected, MaxConfObj gives only one
         public StringTopic StrTopic = inst.getStringTopic("/noteTable/Detections");
+        public static boolean speakerRoutineActivateShooter = false;
 
 
     // Subsystems
@@ -276,6 +278,7 @@ public class RobotContainer
         new Trigger(intakeSubsystem::getSwitchVal)
                 .whileFalse(new RepeatCommand(LEDSubsystem.noteIn()))
                 .onTrue(LEDSubsystem.idle());
+
         
         /* OTF Path simple testing */
         // new JoystickButton(driverController, XboxController.Button.kY.value)
@@ -292,11 +295,17 @@ public class RobotContainer
         //                 ));
 
         /* OTF Path using sensor feedback */
-        //new JoystickButton(driverController, XboxController.Button.kY.value)
-        //        .onTrue(notePickUp());
+        new JoystickButton(driverController, XboxController.Button.kY.value).and(intakeSubsystem::getSwitchVal)
+                .onTrue(notePickUp());
 
-        new JoystickButton(driverController, XboxController.Button.kY.value)
-                .onTrue(automaticShoot());
+        //new JoystickButton(driverController, XboxController.Button.kY.value)
+        //        .onTrue(automaticShoot());
+
+        new Trigger(() -> speakerRoutineActivateShooter)
+                .onTrue(new ParallelCommandGroup(
+                        new ShootSequence(),
+                        new InstantCommand(() -> {speakerRoutineActivateShooter = false;})
+                ));
     }
 
 
@@ -314,7 +323,7 @@ public class RobotContainer
                         autoChooser.getSelected()
                 ),
                 new InstantCommand(() -> shooterSubsystem.setDefaultCommand(shooter))
-        ).finallyDo((boolean inturupted) -> {
+        ).finallyDo((boolean interupted) -> {
             if(DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red){
                 drivebase.setGyro(drivebase.getHeading().minus(Rotation2d.fromDegrees(180)));
             }
@@ -330,6 +339,10 @@ public class RobotContainer
         
     }
 
+    public void activateSpeakerRoutine() {
+        speakerRoutineActivateShooter = true;
+    }
+
     /**
      * Runs OTF path to note and full intake sequence using sensor in parallel
      * @return the command for autoNotePickUp
@@ -338,7 +351,7 @@ public class RobotContainer
         return new InstantCommand(() -> {
                 var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(0));
                 cmd.schedule();                
-        });
+        }); 
     }
 
     /**
@@ -346,10 +359,14 @@ public class RobotContainer
      * @return
      */
     public Command automaticShoot() {
-        return new InstantCommand(() -> {
-                var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(1));
-                cmd.schedule();                
-        }); 
+        
+        return new SequentialCommandGroup(
+                new InstantCommand(() -> {
+                        var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(1));
+                        cmd.schedule();                
+                })
+        );
+                
     }
 
     public void teleOpInit() {

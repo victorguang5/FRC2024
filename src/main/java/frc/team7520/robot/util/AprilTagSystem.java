@@ -127,10 +127,10 @@ public class AprilTagSystem {
         var result = camera.getLatestResult();
         // robot center relative to camera x, y, z
         double CAMERA_POS_FOR_ROBOT_X = 0.254; // Meters
-        double CAMERA_POS_FOR_ROBOT_Y = -0.0127;
+        double CAMERA_POS_FOR_ROBOT_Y = 0;
         double CAMERA_POS_FOR_ROBOT_Z = -0.6858;
         double CAMERA_POS_FOR_ROBOT_ROLL = 0;
-        double CAMERA_POS_FOR_ROBOT_PITCH = Math.toRadians(37); // Radians
+        double CAMERA_POS_FOR_ROBOT_PITCH = -Math.toRadians(35); // Radians
         double CAMERA_POS_FOR_ROBOT_YAW = Math.PI;
 
         Transform3d cameraToRobot = new Transform3d(CAMERA_POS_FOR_ROBOT_X, 
@@ -142,12 +142,16 @@ public class AprilTagSystem {
         
         if(result.hasTargets()) {
             PhotonTrackedTarget target = result.getBestTarget();
+            if (target.getBestCameraToTarget().getX() > MAX_RANGE) {
+                return null;
+            }
             Pose3d robotPose = PhotonUtils.estimateFieldToRobotAprilTag(
                 target.getBestCameraToTarget(), 
                 aprilTagFieldLayout.getTagPose(target.getFiducialId()).get(), 
                 cameraToRobot);
-            SmartDashboard.putNumber("Tag X", target.getBestCameraToTarget().getX());
-            SmartDashboard.putNumber("Tag Y", target.getBestCameraToTarget().getY());
+            
+            //SmartDashboard.putNumber("Tag X", target.getBestCameraToTarget().getX());
+            //SmartDashboard.putNumber("Tag Y", target.getBestCameraToTarget().getY());
             return robotPose.toPose2d();            
         } 
         return null;

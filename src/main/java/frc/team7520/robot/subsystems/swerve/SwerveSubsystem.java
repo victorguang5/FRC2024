@@ -35,6 +35,8 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.networktables.*;
 import frc.team7520.robot.Constants;
+import frc.team7520.robot.Robot;
+import frc.team7520.robot.RobotContainer;
 import frc.team7520.robot.Constants.IntakeConstants.Position;
 import frc.team7520.robot.auto.AutoIntake;
 import frc.team7520.robot.auto.AutoNotePickUp;
@@ -291,14 +293,16 @@ public class SwerveSubsystem extends SubsystemBase {
             Pose2d updatedPose = aprilTagSystem.getCurrentRobotFieldPose();
             if (updatedPose != null && counter > 20) {
                 counter = 0;
-                addVisionReading(updatedPose);
-                System.out.println(updatedPose.getX() + " " + updatedPose.getY() + " " + updatedPose.getRotation().getDegrees());
+                resetOdometry(updatedPose);
+                //SmartDashboard.putNumber("Estimated Pose Angle",updatedPose.getRotation().getDegrees());
             } else {
                 //System.out.println(counter);
                 counter++;
             }
         }
-        //System.out.println(getPose().getX() + " " + getPose().getY() + " " + getPose().getRotation().getDegrees());
+        SmartDashboard.putNumber("ROBOT POSE X", getPose().getX());
+        SmartDashboard.putNumber("ROBOT POSE Y", getPose().getY());
+        //SmartDashboard.putNumber("Current Pose Angle", getPose().getRotation().getDegrees());
         aprilTagSystem.periodic(getPose());
 
         /** Note Detection Stuff */
@@ -552,7 +556,7 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     /**
-     * Add a vision reading for updating odometry.
+     * Add a vision reading for updating odometry. This method is kind of buggy and makes the robot lose its heading for some reason...?
      */
     public void addVisionReading(Pose2d newPose) {
         swerveDrive.addVisionMeasurement(newPose, Timer.getFPGATimestamp());
@@ -680,12 +684,11 @@ public class SwerveSubsystem extends SubsystemBase {
             if (true) { // Change the argument to whether you are in range for the position using Map
                 List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
                     getPose(), 
-                    new Pose2d(x+0.5, y, Rotation2d.fromDegrees(-direction)) 
+                    new Pose2d(x+1, y, Rotation2d.fromDegrees(-direction)) 
                 );
 
-                EventMarker em = new EventMarker(0.9, new InstantCommand(() -> intakeSubsystem.setSpeed(1)));
-                EventMarker em2 = new EventMarker(0.8, new AutoShoot(1, false));
-                List<EventMarker> lst_em = Arrays.asList(em, em2);
+                EventMarker em = new EventMarker(0.7, new InstantCommand(() -> {RobotContainer.speakerRoutineActivateShooter = true;})); // THIS COMMAND IS TERMINATED WHEN THE PATH ENDS
+                List<EventMarker> lst_em = Arrays.asList(em);
             
                 //RotationTarget rt = new RotationTarget(0.5, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()));
                 List<RotationTarget> lst_rt = Arrays.asList();
