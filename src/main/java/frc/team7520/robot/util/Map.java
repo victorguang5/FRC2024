@@ -1,4 +1,4 @@
-package frc.team7520.robot.subsystems.swerve;
+package frc.team7520.robot.util;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -9,6 +9,7 @@ public class Map {
 
     /* For details check out https://firstfrc.blob.core.windows.net/frc2024/FieldAssets/2024LayoutMarkingDiagram.pdf */
     private Pose2d robotPose;
+    
     final private Pose2d AT1 = new Pose2d(new Translation2d(15.079472, 0.245872), new Rotation2d(Math.toRadians(120))); // B SOURCE 
     final private Pose2d AT2 = new Pose2d(new Translation2d(16.185134, 0.883666), new Rotation2d(Math.toRadians(120))); // B SOURCE
     final private Pose2d AT3 = new Pose2d(new Translation2d(16.579342, 4.982718), new Rotation2d(Math.toRadians(180))); // R SPEAKER 
@@ -50,10 +51,11 @@ public class Map {
     public Pose2d updateRobotPose(int id, Transform3d transformation) {
         Pose2d currentAT = APRILTAGS[id-1];
         //make use of robotPose and tag pose
+        return null;
     }
 
     public Rotation2d aprilTagDirection() {
-        
+        return null;
     }
 
     /**
@@ -110,11 +112,11 @@ public class Map {
      */
     public void vectorCalculatedDistanceTag(Transform3d measurement) {
         // What if we analyzed component paths as 2d vectors using translation2d?
-        Translation2d relativeVector = new Translation2d(measurement.getX(), measurement.getY());
-        Translation2d absoluteVector = new Translation2d(relativeVector.getNorm(), new Rotation2d(getHeading().getRadians() + relativeVector.getAngle().getRadians()));
+        //Translation2d relativeVector = new Translation2d(measurement.getX(), measurement.getY());
+        //Translation2d absoluteVector = new Translation2d(relativeVector.getNorm(), new Rotation2d(getHeading().getRadians() + relativeVector.getAngle().getRadians()));
         //SmartDashboard.putNumber("Distance To Target", relativeVector.getNorm());
-        xdistanceTag = absoluteVector.getX();
-        ydistanceTag = absoluteVector.getY();
+        //xdistanceTag = absoluteVector.getX();
+        //ydistanceTag = absoluteVector.getY();
     }
 
 }

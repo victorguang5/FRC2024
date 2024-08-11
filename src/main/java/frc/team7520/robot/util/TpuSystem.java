@@ -8,7 +8,7 @@
  * Using the compareScore method of the Note class, TpuSystem determines the most optimal note and its location.
  * ------------------------------------------------------------------------------------------------------------------------------------ */
 
-package frc.team7520.robot.subsystems.swerve;
+package frc.team7520.robot.util;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;

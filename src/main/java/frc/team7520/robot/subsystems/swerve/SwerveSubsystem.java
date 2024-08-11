@@ -37,7 +37,12 @@ import frc.team7520.robot.Constants;
 import frc.team7520.robot.Constants.IntakeConstants.Position;
 import frc.team7520.robot.auto.AutoIntake;
 import frc.team7520.robot.auto.AutoNotePickUp;
+import frc.team7520.robot.auto.ShootSequence;
 import frc.team7520.robot.subsystems.intake.IntakeSubsystem;
+import frc.team7520.robot.util.AprilTagSystem;
+import frc.team7520.robot.util.Map;
+import frc.team7520.robot.util.AprilTagSystem;
+import frc.team7520.robot.util.TpuSystem;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveMath;
@@ -71,15 +76,12 @@ public class SwerveSubsystem extends SubsystemBase {
     /**
      * Camera for photon
      */
-    public PhotonCamera camera = new PhotonCamera("PhotonCam");
-    public double pitch, yaw, area = 0;    
-    public int id = -1;
+    public AprilTagSystem aprilTagSystem = new AprilTagSystem("");
 
     
-    public double xdistanceNote, ydistanceNote, zdistanceNote = 0;
+    public double xdistanceNote, ydistanceNote = 0;
     
-    public TpuSystem tpu;
-    public Map map;
+    public TpuSystem tpuSystem;
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
      *
@@ -127,8 +129,7 @@ public class SwerveSubsystem extends SubsystemBase {
         System.out.println("\t\"drive\": " + driveConversionFactor);
         System.out.println("}");
 
-        tpu = new TpuSystem(topic);
-        map = new Map(getPose());
+        tpuSystem = new TpuSystem(topic);
 
         // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects being created.
         SwerveDriveTelemetry.verbosity = SWERVE_VERBOSITY;
@@ -268,30 +269,34 @@ public class SwerveSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        map.periodic(getPose());
-
         /** Photonvision stuff */
-        var result = camera.getLatestResult();
-        boolean hasTargets = result.hasTargets();
-        id = -1;
-        if (hasTargets) {
-            PhotonTrackedTarget target = result.getBestTarget();
-            //yaw = target.getYaw();
-            //pitch = target.getPitch();
-            //area = target.getArea();
-            id = target.getFiducialId();
-
-            /** Transform3d only works when that resolution size for processing stream has been trained/calibrated. */
-            Transform3d measurement = target.getBestCameraToTarget();
-            Pose2d updatedPose = map.updateRobotPose(id, measurement);
-            addVisionReading(updatedPose);
-            //vectorCalculatedDistanceTag(measurement);
+        // var result = camera.getLatestResult();
+        // boolean hasTargets = result.hasTargets();
+        // id = -1;
+        // if (hasTargets) {
+        //     PhotonTrackedTarget target = result.getBestTarget();
+        //     //yaw = target.getYaw();
+        //     //pitch = target.getPitch();
+        //     //area = target.getArea();
+        //     id = target.getFiducialId();
+        //     /** Transform3d only works when that resolution size for processing stream has been trained/calibrated. */
+        //     Transform3d measurement = target.getBestCameraToTarget();
+        //     Pose2d updatedPose = map.updateRobotPose(id, measurement);
+        //     vectorCalculatedDistanceTag(measurement);
+        // }
+        
+        if (aprilTagSystem.initiateAprilTagLayout()) {
+            Pose2d updatedPose = aprilTagSystem.getCurrentRobotFieldPose();
+            if (updatedPose != null) {
+                addVisionReading(updatedPose);
+            }
         }
+        aprilTagSystem.periodic(getPose());
 
         /** Note Detection Stuff */
-        tpu.periodic();
+        tpuSystem.periodic();
         // Be AWARE that xdistanceNote and ydistanceNote MAY BE USED FOR APRIL TAGS
-        Translation2d relativeNoteLocation = tpu.getBestNoteLocation();
+        Translation2d relativeNoteLocation = tpuSystem.getBestNoteLocation();
         vectorCalculatedDistanceNote(relativeNoteLocation);
         SmartDashboard.putNumber("X Distance To Note", relativeNoteLocation.getX());
         SmartDashboard.putNumber("Y Distance To Note", relativeNoteLocation.getY());
@@ -299,8 +304,6 @@ public class SwerveSubsystem extends SubsystemBase {
         /** For april tag detection */
         //SmartDashboard.putNumber("Rotation", swerveDrive.getPose().getRotation().getDegrees());
         //SmartDashboard.putBoolean("Detected!", hasTargets);
-        //SmartDashboard.putNumber("Tag X", xdistanceNote);
-        //SmartDashboard.putNumber("Tag Y", ydistanceNote);
         //SmartDashboard.putNumber("Yaw", yaw);
     }
 
@@ -620,69 +623,98 @@ public class SwerveSubsystem extends SubsystemBase {
         return path;
     }
 
-    public PathPlannerPath seanOTFPath() {
-        // TpuSystem tpusystem = new TpuSystem();
-
-        // Translation2d translate = Note.getLocation();
+    /**
+     * Creates an OTF path containing events, rotation targets, and specific constraint zones where required. Used for autonomous actions. If no note
+     * is detected, or the wanted position is not available for any reason, the path will only be 0.1m forward.
+     * @param mode 0 for note pickup, 1 for shooter sequence.
+     * @return a Path
+     */
+    public PathPlannerPath sophisticatedOTFPath(int mode) {
         double x = getPose().getX();
         double y = getPose().getY();
         double direction = getHeading().getDegrees();
 
         IntakeSubsystem intakeSubsystem = IntakeSubsystem.getInstance();
 
-        if (xdistanceNote != 0 && ydistanceNote !=0) {
-            List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
-                getPose(), 
-                new Pose2d(x + xdistanceNote, y + ydistanceNote, Rotation2d.fromDegrees(direction + tpu.getBestNoteAngleToApproach()))
-            );
+        if (mode == 0) {
+            /* Note sequence */
+            if (xdistanceNote != 0 && ydistanceNote != 0) {
+                List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
+                    getPose(), 
+                    new Pose2d(x + xdistanceNote, y + ydistanceNote, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()))
+                );
+                EventMarker em = new EventMarker(0, new AutoNotePickUp());
+                EventMarker em3 = new EventMarker(1, new AutoIntake(Position.SHOOT));
+                EventMarker em4 = new EventMarker(1, new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
+                List<EventMarker> lst_em = Arrays.asList(em, em3, em4);
 
-            List<Translation2d> bezierPoints2 = PathPlannerPath.bezierFromPoses(
-                new Pose2d(0, 0, Rotation2d.fromDegrees(0)),
-                new Pose2d(2, 0, Rotation2d.fromDegrees(0))
-            );
+                RotationTarget rt = new RotationTarget(0.5, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()));
+                List<RotationTarget> lst_rt = Arrays.asList(rt);
+                
+                //ConstraintsZone cz = new ConstraintsZone(0.3, 0.6, new PathConstraints(0.05, 0.5, 0.5 * Math.PI, 0.5 * Math.PI));
+                List<ConstraintsZone> lst_cz = Arrays.asList();
 
-            EventMarker em = new EventMarker(0, new AutoNotePickUp());
-            //EventMarker em2 = new EventMarker(0, new InstantCommand(() -> intakeSubsystem.setSpeed(Position.INTAKE.getSpeed())));
-            EventMarker em3 = new EventMarker(1, new AutoIntake(Position.SHOOT));
-            EventMarker em4 = new EventMarker(1, new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
-            List<EventMarker> lst_em = Arrays.asList(em, em3, em4);
-        
-            RotationTarget rt = new RotationTarget(0.5, Rotation2d.fromDegrees(direction + tpu.getBestNoteAngleToApproach()));
-            List<RotationTarget> lst_rt = Arrays.asList(rt);
+                PathPlannerPath path = new PathPlannerPath(
+                    bezierPoints,
+                    lst_rt,
+                    lst_cz,
+                    lst_em,
+                    new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI),
+                    new GoalEndState(0.0, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach())),
+                    false
+                );
+
+                path.preventFlipping = true;
+                return path;
+            }
+        } else if (mode == 1) {
+            /* Shooting sequence */
+            if (true) { // Change the argument to whether you are in range for the position using Map
+                List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
+                    getPose(), 
+                    new Pose2d(0.5, 0, Rotation2d.fromDegrees(-direction)) 
+                );
+
+                EventMarker em = new EventMarker(0.9, new ShootSequence());
+                List<EventMarker> lst_em = Arrays.asList(em);
             
-            ConstraintsZone cz = new ConstraintsZone(0.3, 0.6, new PathConstraints(0.05, 0.5, 0.5 * Math.PI, 0.5 * Math.PI));
-            List<ConstraintsZone> lst_cz = Arrays.asList();
+                //RotationTarget rt = new RotationTarget(0.5, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()));
+                List<RotationTarget> lst_rt = Arrays.asList();
+                
+                //ConstraintsZone cz = new ConstraintsZone(0.3, 0.6, new PathConstraints(0.05, 0.5, 0.5 * Math.PI, 0.5 * Math.PI));
+                List<ConstraintsZone> lst_cz = Arrays.asList();
 
-            PathPlannerPath path = new PathPlannerPath(
-                bezierPoints,
-                lst_rt,
-                lst_cz,
-                lst_em,
-                new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI),
-                new GoalEndState(0.0, Rotation2d.fromDegrees(direction + tpu.getBestNoteAngleToApproach())),
-                false
-            );
+                PathPlannerPath path = new PathPlannerPath(
+                    bezierPoints,
+                    lst_rt,
+                    lst_cz,
+                    lst_em,
+                    new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI),
+                    new GoalEndState(0.0, Rotation2d.fromDegrees(direction)), // change direction to rotation of pose of april tag
+                    false
+                );
 
-            path.preventFlipping = true;
-            return path;
-
-        } else {
-            List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
-                getPose(), //The Path starts at the position of the robot currently, but first move towards the direction it was facing before it curves to end point. As such, different diretions will give different curves to end point
-                new Pose2d(x + 0.1, y, Rotation2d.fromDegrees(direction)) //The end point +1 meter in the x direction and +1 meter in the y direction. Enter the end point with THE PATH FACING 0 degrees
-            );
-
-            // Create the path using the bezier points created above
-            PathPlannerPath path = new PathPlannerPath(
-                bezierPoints,
-                new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI), //Global constraints
-                new GoalEndState(0.0, Rotation2d.fromDegrees(direction)) //End with in the same direction as when the robot was facing when the path started
-            );
-
-            // Prevent the path from being flipped if the coordinates are already correct
-            path.preventFlipping =true;
-
-            return path;
+                path.preventFlipping = true;
+                return path;
+            }
         }
+
+        /* If no notes detected or no path to go to */
+        List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
+                    getPose(), //The Path starts at the position of the robot currently, but first move towards the direction it was facing before it curves to end point. As such, different diretions will give different curves to end point
+                    new Pose2d(x + 0.1, y, Rotation2d.fromDegrees(direction)) //The end point +1 meter in the x direction and +1 meter in the y direction. Enter the end point with THE PATH FACING 0 degrees
+                );
+
+                // Create the path using the bezier points created above
+                PathPlannerPath path = new PathPlannerPath(
+                    bezierPoints,
+                    new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI), //Global constraints
+                    new GoalEndState(0.0, Rotation2d.fromDegrees(direction)) //End with in the same direction as when the robot was facing when the path started
+                );
+
+                // Prevent the path from being flipped if the coordinates are already correct
+                path.preventFlipping =true;
+
+                return path;
     }
 }

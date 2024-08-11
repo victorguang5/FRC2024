@@ -292,9 +292,11 @@ public class RobotContainer
         //                 ));
 
         /* OTF Path using sensor feedback */
+        //new JoystickButton(driverController, XboxController.Button.kY.value)
+        //        .onTrue(notePickUp());
+
         new JoystickButton(driverController, XboxController.Button.kY.value)
-                .onTrue(notePickUp());
-                //.onTrue(new AutoNotePickUp());
+                .onTrue(automaticShoot());
     }
 
 
@@ -333,26 +335,21 @@ public class RobotContainer
      * @return the command for autoNotePickUp
      */
     public Command notePickUp() {
-        //return new SequentialCommandGroup(
-                //return new ParallelCommandGroup(
-                        return new InstantCommand(() -> {
-                                var cmd = AutoBuilder.followPath(drivebase.seanOTFPath());
-                                cmd.schedule();                
-                        }); 
-                        //new AutoNotePickUp()); 
-                //new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(0)),
-                //new AutoIntake(Constants.IntakeConstants.Position.SHOOT)
-        //);
+        return new InstantCommand(() -> {
+                var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(0));
+                cmd.schedule();                
+        });
     }
 
+    /**
+     * Runs OTF path to speaker position and shoot sequence, timed
+     * @return
+     */
     public Command automaticShoot() {
-        return new ParallelDeadlineGroup(
-                new InstantCommand(() -> {
-                        var cmd = AutoBuilder.followPath(drivebase.robinPath());
-                        cmd.schedule();                
-                }), 
-                new AutoNotePickUp()
-        );
+        return new InstantCommand(() -> {
+                var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(1));
+                cmd.schedule();                
+        }); 
     }
 
     public void teleOpInit() {
