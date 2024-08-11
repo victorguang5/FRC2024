@@ -72,12 +72,14 @@ public class SwerveSubsystem extends SubsystemBase {
      * Camera for photon
      */
     public PhotonCamera camera = new PhotonCamera("PhotonCam");
-    public double pitch, yaw, area = 0;
-    public double xdistance, ydistance, zdistance = 0;
+    public double pitch, yaw, area = 0;    
     public int id = -1;
 
     
+    public double xdistanceNote, ydistanceNote, zdistanceNote = 0;
+    
     public TpuSystem tpu;
+    public Map map;
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
      *
@@ -126,6 +128,7 @@ public class SwerveSubsystem extends SubsystemBase {
         System.out.println("}");
 
         tpu = new TpuSystem(topic);
+        map = new Map(getPose());
 
         // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects being created.
         SwerveDriveTelemetry.verbosity = SWERVE_VERBOSITY;
@@ -265,40 +268,39 @@ public class SwerveSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        map.periodic(getPose());
+
         /** Photonvision stuff */
         var result = camera.getLatestResult();
         boolean hasTargets = result.hasTargets();
-        ydistance = 0.1;
-        xdistance = 0.1;
         id = -1;
         if (hasTargets) {
             PhotonTrackedTarget target = result.getBestTarget();
-            yaw = target.getYaw();
-            pitch = target.getPitch();
-            area = target.getArea();
+            //yaw = target.getYaw();
+            //pitch = target.getPitch();
+            //area = target.getArea();
             id = target.getFiducialId();
 
             /** Transform3d only works when that resolution size for processing stream has been trained/calibrated. */
             Transform3d measurement = target.getBestCameraToTarget();
-            vectorCalculatedDistance(measurement);
-            
-            //SmartDashboard.putNumber("X", measurement.getX());
-            //SmartDashboard.putNumber("Y", measurement.getY());
+            Pose2d updatedPose = map.updateRobotPose(id, measurement);
+            addVisionReading(updatedPose);
+            //vectorCalculatedDistanceTag(measurement);
         }
 
         /** Note Detection Stuff */
         tpu.periodic();
-        // Be AWARE that xdistance and ydistance MAY BE USED FOR APRIL TAGS
+        // Be AWARE that xdistanceNote and ydistanceNote MAY BE USED FOR APRIL TAGS
         Translation2d relativeNoteLocation = tpu.getBestNoteLocation();
-        vectorCalculatedDistance(relativeNoteLocation);
+        vectorCalculatedDistanceNote(relativeNoteLocation);
         SmartDashboard.putNumber("X Distance To Note", relativeNoteLocation.getX());
         SmartDashboard.putNumber("Y Distance To Note", relativeNoteLocation.getY());
 
         /** For april tag detection */
         //SmartDashboard.putNumber("Rotation", swerveDrive.getPose().getRotation().getDegrees());
         //SmartDashboard.putBoolean("Detected!", hasTargets);
-        //SmartDashboard.putNumber("Tag X", xdistance);
-        //SmartDashboard.putNumber("Tag Y", ydistance);
+        //SmartDashboard.putNumber("Tag X", xdistanceNote);
+        //SmartDashboard.putNumber("Tag Y", ydistanceNote);
         //SmartDashboard.putNumber("Yaw", yaw);
     }
 
@@ -315,30 +317,14 @@ public class SwerveSubsystem extends SubsystemBase {
      * 
      * <p> By Robin
      * @param measurement the target percieved in 3 dimensions
-     * @see #vectorCalculatedDistance(Transform3d) 
+     * @see #vectorCalculatedDistanceNote(Transform3d) 
      * @deprecated
      */
     public @Deprecated void trigonometricCalculatedDistance(Transform3d measurement) {
-        ydistance = measurement.getX() * Math.sin((getHeading().getRadians())) + measurement.getY() * Math.cos((getHeading().getRadians()));
-        xdistance = - measurement.getY() * Math.sin(Math.abs(getHeading().getRadians())) + measurement.getX() * Math.cos((getHeading().getRadians()));
+        ydistanceNote = measurement.getX() * Math.sin((getHeading().getRadians())) + measurement.getY() * Math.cos((getHeading().getRadians()));
+        xdistanceNote = - measurement.getY() * Math.sin(Math.abs(getHeading().getRadians())) + measurement.getX() * Math.cos((getHeading().getRadians()));
     }
 
-    /**
-     * Calculates the abs x and y distance from the current position to a target position. This method makes use of literal 2d vectors through
-     * the Translation2d library. In theory, find a position vector relative to the robot, find it's angle to the forward facing vector, and 
-     * adding that to the heading find the abs vector with its direction, and therefore the abs x and y components. Very easy!
-     * 
-     * <p> By Robin
-     * @param measurement the target percieved in 3 dimensions
-     */
-    public void vectorCalculatedDistance(Transform3d measurement) {
-        // What if we analyzed component paths as 2d vectors using translation2d?
-        Translation2d relativeVector = new Translation2d(measurement.getX(), measurement.getY());
-        Translation2d absoluteVector = new Translation2d(relativeVector.getNorm(), new Rotation2d(getHeading().getRadians() + relativeVector.getAngle().getRadians()));
-        //SmartDashboard.putNumber("Distance To Target", relativeVector.getNorm());
-        xdistance = absoluteVector.getX();
-        ydistance = absoluteVector.getY();
-    }
 
     /**
      * Calculates the abs x and y distance from the current position to a target position. This method makes use of literal 2d vectors through
@@ -348,12 +334,12 @@ public class SwerveSubsystem extends SubsystemBase {
      * <p> By Robin
      * @param measurement the target percieved in 2 dimensions, birds eye view.
      */
-    public void vectorCalculatedDistance(Translation2d relativeVector) {
+    public void vectorCalculatedDistanceNote(Translation2d relativeVector) {
         // What if we analyzed component paths as 2d vectors using translation2d?
         Translation2d absoluteVector = new Translation2d(relativeVector.getNorm(), new Rotation2d(getHeading().getRadians() + relativeVector.getAngle().getRadians()));
         //SmartDashboard.putNumber("Absolute Distance to Note", relativeVector.getNorm());
-        xdistance = absoluteVector.getX();
-        ydistance = absoluteVector.getY();
+        xdistanceNote = absoluteVector.getX();
+        ydistanceNote = absoluteVector.getY();
     }
 
     @Override
@@ -555,10 +541,10 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     /**
-     * Add a fake vision reading for testing purposes.
+     * Add a vision reading for updating odometry.
      */
-    public void addFakeVisionReading() {
-        swerveDrive.addVisionMeasurement(new Pose2d(3, 3, Rotation2d.fromDegrees(65)), Timer.getFPGATimestamp());
+    public void addVisionReading(Pose2d newPose) {
+        swerveDrive.addVisionMeasurement(newPose, Timer.getFPGATimestamp());
     }
 
     public void setGyro(Rotation2d yaw){
@@ -592,7 +578,7 @@ public class SwerveSubsystem extends SubsystemBase {
          */
         List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
             getPose(), //The Path starts at the position of the robot currently, but first move towards the direction it was facing before it curves to end point. As such, different diretions will give different curves to end point
-            new Pose2d(x + xdistance, y + ydistance, Rotation2d.fromDegrees(direction)) //The end point +1 meter in the x direction and +1 meter in the y direction. Enter the end point with THE PATH FACING 0 degrees
+            new Pose2d(x + xdistanceNote, y + ydistanceNote, Rotation2d.fromDegrees(direction)) //The end point +1 meter in the x direction and +1 meter in the y direction. Enter the end point with THE PATH FACING 0 degrees
         );
 
         // Create the path using the bezier points created above
@@ -644,10 +630,10 @@ public class SwerveSubsystem extends SubsystemBase {
 
         IntakeSubsystem intakeSubsystem = IntakeSubsystem.getInstance();
 
-        if (xdistance != 0 && ydistance !=0) {
+        if (xdistanceNote != 0 && ydistanceNote !=0) {
             List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
                 getPose(), 
-                new Pose2d(x + xdistance, y + ydistance, Rotation2d.fromDegrees(direction + tpu.getBestNoteAngleToApproach()))
+                new Pose2d(x + xdistanceNote, y + ydistanceNote, Rotation2d.fromDegrees(direction + tpu.getBestNoteAngleToApproach()))
             );
 
             List<Translation2d> bezierPoints2 = PathPlannerPath.bezierFromPoses(
