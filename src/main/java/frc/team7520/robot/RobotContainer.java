@@ -45,6 +45,7 @@ import frc.team7520.robot.subsystems.intake.IntakeSubsystem;
 import frc.team7520.robot.subsystems.amp.AmpSubsystem;
 import frc.team7520.robot.subsystems.shooter.ShooterSubsystem;
 import frc.team7520.robot.subsystems.swerve.SwerveSubsystem;
+import frc.team7520.robot.util.*;
 
 import java.io.File;
 import java.util.function.BooleanSupplier;
@@ -73,6 +74,8 @@ public class RobotContainer
         //"Detections" supplies all notes detected, MaxConfObj gives only one
         public StringTopic StrTopic = inst.getStringTopic("/noteTable/Detections");
         public static boolean speakerRoutineActivateShooter = false;
+
+        public final static Map map = new Map();
 
 
     // Subsystems
@@ -295,12 +298,17 @@ public class RobotContainer
         //                 cmd.schedule();}
         //                 ));
 
-        /* OTF Path using sensor feedback */
-        new JoystickButton(driverController, XboxController.Button.kY.value).and(intakeSubsystem::getSwitchVal)
-                .onTrue(notePickUp());
-
-        //new JoystickButton(driverController, XboxController.Button.kY.value)
-        //        .onTrue(automaticShoot());
+        /* OTF Path Note using sensor feedback */
+        //new JoystickButton(driverController, XboxController.Button.kY.value).and(intakeSubsystem::getSwitchVal)
+        //        .onTrue(notePickUp());
+        
+        /* OTF Path Shooter timed */
+        new JoystickButton(driverController, XboxController.Button.kY.value)
+                //.onTrue(automaticShoot());
+                .onTrue(new InstantCommand(() -> {
+                         var cmd = AutoBuilder.followPath(drivebase.customPath(map.getSpeakerCenter(), new Rotation2d(map.getSpeakerCenter().getRotation().getRadians() + Math.PI), map.getSpeakerCenter().getRotation()));
+                         cmd.schedule();}
+                         ));
 
         new Trigger(() -> speakerRoutineActivateShooter)
                 .onTrue(new ParallelCommandGroup(
@@ -315,8 +323,7 @@ public class RobotContainer
      *
      * @return the command to run in autonomous
      */
-    public Command getAutonomousCommand()
-    {
+    public Command getAutonomousCommand() {
         
         return new SequentialCommandGroup(
                 new ParallelCommandGroup(
@@ -360,7 +367,6 @@ public class RobotContainer
      * @return
      */
     public Command automaticShoot() {
-        
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
                         var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(1));
@@ -371,8 +377,6 @@ public class RobotContainer
     }
 
     public void teleOpInit() {
-
         shooterSubsystem.setDefaultCommand(shooter);
-
     }
 }
