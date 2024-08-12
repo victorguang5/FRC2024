@@ -378,23 +378,17 @@ public class SwerveSubsystem extends SubsystemBase {
      * @param initialHolonomicPose The pose to set the odometry to
      */
     public void resetOdometry(Pose2d initialHolonomicPose) {
-//        SmartDashboard.putNumber("ResetHeading", initialHolonomicPose.getRotation().getDegrees());
-
+        /* Try commenting out this line to see what happens */
         swerveDrive.setGyro(new Rotation3d(0, 0, initialHolonomicPose.getRotation().getRadians()));
 
         swerveDrive.resetOdometry(initialHolonomicPose);
     }
 
     /**
-     * Resets odometry to the given pose. Gyro angle and module positions do not need to be reset when calling this
-     * method.  However, if either gyro angle or module position is reset, this must be called in order for odometry to
-     * keep working. Pose set is 0.
+     * Resets odometry pose and heading to 0.
      */
     public void resetOdometry() {
-//        SmartDashboard.putNumber("ResetHeading", initialHolonomicPose.getRotation().getDegrees());
-
         swerveDrive.setGyro(new Rotation3d(0, 0, 0));
-
         swerveDrive.resetOdometry(new Pose2d());
     }
 

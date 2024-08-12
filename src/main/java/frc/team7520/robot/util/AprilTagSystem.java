@@ -120,20 +120,35 @@ public class AprilTagSystem {
     }
 
     /**
-     * Estimates the current robot position based on the april tag it sees
+     * Estimates the current robot position based on the april tag it sees. April tags farther than {@link #MAX_RANGE}
+     * are not considered.
      * @return a Pose2d
      */
     public Pose2d getCurrentRobotFieldPose() {
         var result = camera.getLatestResult();
-        // robot center relative to camera x, y, z
-        double CAMERA_POS_FOR_ROBOT_X = 0.254; // Meters
+        /* 
+         * To avoid confusion regarding whether rotation is applied first or translation, and whether the rotation/translational
+         * axes are transformed along with the object, we'll assume translation is considered first before rotation, where each
+         * component of the transformation is considered in the order as it is labeled as a parameter.
+         * 
+         * According to WPILIB Documentation, the related object/class, Transform2d, consists of a translation and a rotation.
+         * In Transform2d, the rotation is applied TO THE TRANSLATION, then the rotation is applied to the object.
+         * This is mathematically equivalent to applying an unrotated translation, then applying the rotation to the object.
+         * Both seqences transform the object to the same destination in space.
+         * 
+         * For simplicity reasons, we should base the camera's transformation relative to the robot center, and then simply inverse
+         * the transformtation - instead of having robot relative to camera.
+         * 
+         * -Robin
+         */
+        double CAMERA_POS_FOR_ROBOT_X = -0.254; // Meters
         double CAMERA_POS_FOR_ROBOT_Y = 0;
-        double CAMERA_POS_FOR_ROBOT_Z = -0.6858;
+        double CAMERA_POS_FOR_ROBOT_Z = 0.6858;
         double CAMERA_POS_FOR_ROBOT_ROLL = 0;
         double CAMERA_POS_FOR_ROBOT_PITCH = -Math.toRadians(35); // Radians
         double CAMERA_POS_FOR_ROBOT_YAW = Math.PI;
 
-        Transform3d cameraToRobot = new Transform3d(CAMERA_POS_FOR_ROBOT_X, 
+        Transform3d robotToCamera = new Transform3d(CAMERA_POS_FOR_ROBOT_X, 
                                                     CAMERA_POS_FOR_ROBOT_Y, 
                                                     CAMERA_POS_FOR_ROBOT_Z, 
                                                     new Rotation3d(CAMERA_POS_FOR_ROBOT_ROLL,
@@ -148,7 +163,7 @@ public class AprilTagSystem {
             Pose3d robotPose = PhotonUtils.estimateFieldToRobotAprilTag(
                 target.getBestCameraToTarget(), 
                 aprilTagFieldLayout.getTagPose(target.getFiducialId()).get(), 
-                cameraToRobot);
+                robotToCamera.inverse());
             
             //SmartDashboard.putNumber("Tag X", target.getBestCameraToTarget().getX());
             //SmartDashboard.putNumber("Tag Y", target.getBestCameraToTarget().getY());

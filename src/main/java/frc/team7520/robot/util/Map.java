@@ -1,3 +1,8 @@
+/*
+ * Robin Yan
+ * 08/10/2024
+ * A class designed to be a container of custom position/robot destinations.
+ */
 package frc.team7520.robot.util;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -7,9 +12,44 @@ import edu.wpi.first.math.geometry.Translation2d;
 
 public class Map {
 
-    /* For details check out https://firstfrc.blob.core.windows.net/frc2024/FieldAssets/2024LayoutMarkingDiagram.pdf */
+    /* For details check out https://firstfrc.blob.core.windows.net/frc2024/FieldAssets/2024LayoutMarkingDiagram.pdf 
+     * The red alliance's source, located on the blue alliance's side of the field, is (0,0)
+     * 
+     * Here is the official statement:
+     * 
+     * The XYZ Origin is established in the bottom left corner of
+     * the field (as viewed in the image above). An x
+     * coordinate of 0 is aligned with the Blue Alliance Station
+     * diamond plate. A y coordinate of 0 is aligned with the
+     * side border polycarbonate on the Scoring Table side of
+     * the field. A z coordinate of 0 is on the carpet.
+     * +Z is up into the air from the carpet, +X is horizontal to the
+     * right (in this image above) toward the opposing alliance
+     * stations, and +Y runs from the Field Border towards the SPEAKERS.
+     * The face-pose of the tags is denoted with 1 degree
+     * representation, the Z-rotation. 
+     * 
+     * 0° faces the red alliance
+     * station, 90° faces the non- scoring table side, and 180°
+     * faces the blue alliance station. Distances are measured to the
+     * center of the tag.
+     * 
+     * ** Keep in mind that intake is the head! **
+     */
     private Pose2d robotPose;
+    private boolean redAlliance = false;
+
+    private Pose2d redSpeakerCenter = new Pose2d(16, 5.5, new Rotation2d(Math.toRadians(180)));
+    private Pose2d redSpeakerSourceSide = new Pose2d();
+    private Pose2d redSpeakerAmpSide = new Pose2d();
+    private Pose2d redAmp = new Pose2d();
+
+    private Pose2d blueSpeakerCenter = new Pose2d(0.54, 5.5, new Rotation2d(0));
+    private Pose2d blueSpeakerSourceSide = new Pose2d();
+    private Pose2d blueSpeakerAmpSide = new Pose2d();
+    private Pose2d blueAmp = new Pose2d();
     
+    /* 
     final private Pose2d AT1 = new Pose2d(new Translation2d(15.079472, 0.245872), new Rotation2d(Math.toRadians(120))); // B SOURCE 
     final private Pose2d AT2 = new Pose2d(new Translation2d(16.185134, 0.883666), new Rotation2d(Math.toRadians(120))); // B SOURCE
     final private Pose2d AT3 = new Pose2d(new Translation2d(16.579342, 4.982718), new Rotation2d(Math.toRadians(180))); // R SPEAKER 
@@ -34,8 +74,7 @@ public class Map {
     final private double FIELD_WIDTH = 8.21; 
     final private double FIELD_CENTER = FIELD_LENGTH/2;
     private int allianceSide = 0;
-
-    
+    */
     //public double xdistanceTag, ydistanceTag, zdistanceTag = 0;
 
     public Map(Pose2d robotPose) {
@@ -48,75 +87,59 @@ public class Map {
 
     }
 
-    public Pose2d updateRobotPose(int id, Transform3d transformation) {
-        Pose2d currentAT = APRILTAGS[id-1];
-        //make use of robotPose and tag pose
-        return null;
-    }
-
-    public Rotation2d aprilTagDirection() {
-        return null;
+    /**
+     * Sets the alliance you're on so the class knows what location you mean when you, for example, call speakerCenter
+     * @param yes
+     */
+    public void setRedAlliance(boolean yes) {
+        redAlliance = yes;
     }
 
     /**
-     * Checks which aprilTag is the closest to the robot. Loop depends on which side of the field you are on.
+     * Gets the central shooting Pose2d at the speaker. Location depends the alliance set.
+     * @return a Pose2d
      */
-    private void closestAT() {
-        closestAT = ORGANIZED_AT[allianceSide][0];
-        for (int i = 0; i < 8; i++) {
-            closestAT = compareAT(closestAT, ORGANIZED_AT[allianceSide][i]);
-        } 
-        
-    }
-
-    /**
-     * Checks which side of the field you are on. Red Alliance's Source is (0,0).
-     */
-    private void checkSide() {
-        if (robotPose.getX() < FIELD_CENTER) {
-            allianceSide = 1; // blue
+    public Pose2d getSpeakerCenter() {
+        if (redAlliance) {
+            return redSpeakerCenter;
         } else {
-            allianceSide = 0; // red
+            return blueSpeakerCenter;
         }
     }
 
     /**
-     * Calculates the distance between the given aprilTag and robot pose
-     * @param aprilTag
-     * @return
+     * Gets the source side shooting Pose2d at the speaker. Location depends the alliance set.
+     * @return a Pose2d
      */
-    private double checkDistance(Pose2d aprilTag) {
-        return aprilTag.getTranslation().getDistance(robotPose.getTranslation());
-    }
-
-    /**
-     * Compares which of the two given aprilTags have a smaller distance the robot
-     * @param aprilTag1
-     * @param aprilTag2
-     * @return a Pose2d representing an AprilTag
-     */
-    private Pose2d compareAT(Pose2d aprilTag1, Pose2d aprilTag2) {
-        if (checkDistance(aprilTag1) <= checkDistance(aprilTag2)) {
-            return aprilTag1;
+    public Pose2d getSpeakerSourceSide() {
+        if (redAlliance) {
+            return redSpeakerSourceSide;
+        } else {
+            return blueSpeakerSourceSide;
         }
-        return aprilTag2;
     }
 
     /**
-     * Calculates the abs x and y distance from the current position to a target position. This method makes use of literal 2d vectors through
-     * the Translation2d library. In theory, find a position vector relative to the robot, find it's angle to the forward facing vector, and 
-     * adding that to the heading find the abs vector with its direction, and therefore the abs x and y components. Very easy!
-     * 
-     * <p> By Robin
-     * @param measurement the target percieved in 3 dimensions
+     * Gets the amp side shooting Pose2d at the speaker. Location depends the alliance set.
+     * @return a Pose2d
      */
-    public void vectorCalculatedDistanceTag(Transform3d measurement) {
-        // What if we analyzed component paths as 2d vectors using translation2d?
-        //Translation2d relativeVector = new Translation2d(measurement.getX(), measurement.getY());
-        //Translation2d absoluteVector = new Translation2d(relativeVector.getNorm(), new Rotation2d(getHeading().getRadians() + relativeVector.getAngle().getRadians()));
-        //SmartDashboard.putNumber("Distance To Target", relativeVector.getNorm());
-        //xdistanceTag = absoluteVector.getX();
-        //ydistanceTag = absoluteVector.getY();
+    public Pose2d getSpeakerAmpSide() {
+        if (redAlliance) {
+            return redSpeakerAmpSide;
+        } else {
+            return blueSpeakerAmpSide;
+        }
     }
 
+    /**
+     * Gets the amp Pose2d. Location depends the alliance set.
+     * @return a Pose2d.
+     */
+    public Pose2d getAmp() {
+        if (redAlliance) {
+            return redAmp;
+        } else {
+            return blueAmp;
+        }
+    }
 }
