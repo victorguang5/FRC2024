@@ -57,6 +57,7 @@ import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
 import java.io.File;
+import java.sql.Driver;
 import java.util.Arrays;
 import java.util.List;
 
@@ -78,14 +79,23 @@ public class SwerveSubsystem extends SubsystemBase {
      */
     public double maximumSpeed = Units.feetToMeters(14.5); //14.5
     /**
-     * Camera for photon
+     * AprilTagSystem
      */
     public AprilTagSystem aprilTagSystem = new AprilTagSystem("Arducam_OV9281_USB_Camera");
     int counter = 0;
     
+    /**
+     * TpuSystem
+     */
     public double xdistanceNote, ydistanceNote = 0;
-    
     public TpuSystem tpuSystem;
+
+    /**
+     * ABSOLUTE COORDINATE variables. Used by other classes.
+     */
+    public static boolean isBlueAlliance = false;
+    private boolean driverStationReady = false;
+
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
      *
@@ -102,8 +112,6 @@ public class SwerveSubsystem extends SubsystemBase {
         System.out.println("\t\"angle\": " + angleConversionFactor + ",");
         System.out.println("\t\"drive\": " + driveConversionFactor);
         System.out.println("}");
-
-
 
         // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects being created.
         SwerveDriveTelemetry.verbosity = SWERVE_VERBOSITY;
@@ -247,10 +255,7 @@ public class SwerveSubsystem extends SubsystemBase {
      * @param fieldRelative Drive mode.  True for field-relative, false for robot-relative.
      */
     public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
-        swerveDrive.drive(translation,
-                rotation,
-                fieldRelative,
-                false); // Open loop is disabled since it shouldn't be used most of the time.
+        swerveDrive.drive(translation, rotation, fieldRelative,false); // Open loop is disabled since it shouldn't be used most of the time.
     }
 
     /**
@@ -273,6 +278,12 @@ public class SwerveSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if (!driverStationReady) {
+            driverStationReady = DriverStation.getAlliance().isPresent();
+        } else {
+            isBlueAlliance = (DriverStation.getAlliance().get() == DriverStation.Alliance.Blue);
+        }
+        
         /** Photonvision stuff */
         // var result = camera.getLatestResult();
         // boolean hasTargets = result.hasTargets();
@@ -291,7 +302,7 @@ public class SwerveSubsystem extends SubsystemBase {
         
         if (aprilTagSystem.initiateAprilTagLayout()) {
             Pose2d updatedPose = aprilTagSystem.getCurrentRobotFieldPose();
-            if (updatedPose != null && counter > 20) {
+            if (updatedPose != null && counter > 1) {
                 counter = 0;
                 resetOdometry(updatedPose);
                 //SmartDashboard.putNumber("Estimated Pose Angle",updatedPose.getRotation().getDegrees());
@@ -302,7 +313,7 @@ public class SwerveSubsystem extends SubsystemBase {
         }
         SmartDashboard.putNumber("ROBOT POSE X", getPose().getX());
         SmartDashboard.putNumber("ROBOT POSE Y", getPose().getY());
-        //SmartDashboard.putNumber("Current Pose Angle", getPose().getRotation().getDegrees());
+        SmartDashboard.putNumber("Current Pose Angle", getPose().getRotation().getDegrees());
         aprilTagSystem.periodic(getPose());
 
         /** Note Detection Stuff */
@@ -378,9 +389,7 @@ public class SwerveSubsystem extends SubsystemBase {
      * @param initialHolonomicPose The pose to set the odometry to
      */
     public void resetOdometry(Pose2d initialHolonomicPose) {
-        /* Try commenting out this line to see what happens */
         swerveDrive.setGyro(new Rotation3d(0, 0, initialHolonomicPose.getRotation().getRadians()));
-
         swerveDrive.resetOdometry(initialHolonomicPose);
     }
 

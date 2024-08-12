@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import frc.team7520.robot.subsystems.swerve.SwerveSubsystem;
 
 public class Map {
 
@@ -36,17 +37,14 @@ public class Map {
      * 
      * ** Keep in mind that intake is the head! **
      */
-    private Pose2d robotPose;
-    private boolean redAlliance = false;
-
-    private Pose2d redSpeakerCenter = new Pose2d(16, 5.5, new Rotation2d(Math.toRadians(180)));
-    private Pose2d redSpeakerSourceSide = new Pose2d();
-    private Pose2d redSpeakerAmpSide = new Pose2d();
+    private Pose2d redSpeakerCenter = new Pose2d(15.2, 5.5, new Rotation2d(Math.toRadians(180)));
+    private Pose2d redSpeakerSourceSide = new Pose2d(15.4, 5.5, new Rotation2d(Math.toRadians(-120)));
+    private Pose2d redSpeakerAmpSide = new Pose2d(15.4, 6.6, new Rotation2d(Math.toRadians(120)));
     private Pose2d redAmp = new Pose2d();
 
-    private Pose2d blueSpeakerCenter = new Pose2d(0.54, 5.5, new Rotation2d(0));
-    private Pose2d blueSpeakerSourceSide = new Pose2d();
-    private Pose2d blueSpeakerAmpSide = new Pose2d();
+    private Pose2d blueSpeakerCenter = new Pose2d(1.3, 5.5, new Rotation2d(0));
+    private Pose2d blueSpeakerSourceSide = new Pose2d(1.1, 5.5, new Rotation2d(Math.toRadians(-60)));
+    private Pose2d blueSpeakerAmpSide = new Pose2d(1.1, 6.6, new Rotation2d(Math.toRadians(60)));
     private Pose2d blueAmp = new Pose2d();
     
     /* 
@@ -77,33 +75,19 @@ public class Map {
     */
     //public double xdistanceTag, ydistanceTag, zdistanceTag = 0;
 
-    public Map(Pose2d robotPose) {
-        periodic(robotPose);
+    public Map() {
     }
 
-    public void periodic(Pose2d robotPose) {
-        this.robotPose = robotPose;
-        //closestAT();
-
-    }
-
-    /**
-     * Sets the alliance you're on so the class knows what location you mean when you, for example, call speakerCenter
-     * @param yes
-     */
-    public void setRedAlliance(boolean yes) {
-        redAlliance = yes;
-    }
 
     /**
      * Gets the central shooting Pose2d at the speaker. Location depends the alliance set.
      * @return a Pose2d
      */
     public Pose2d getSpeakerCenter() {
-        if (redAlliance) {
-            return redSpeakerCenter;
-        } else {
+        if (SwerveSubsystem.isBlueAlliance) {
             return blueSpeakerCenter;
+        } else {
+            return redSpeakerCenter;
         }
     }
 
@@ -112,10 +96,10 @@ public class Map {
      * @return a Pose2d
      */
     public Pose2d getSpeakerSourceSide() {
-        if (redAlliance) {
-            return redSpeakerSourceSide;
-        } else {
+        if (SwerveSubsystem.isBlueAlliance) {
             return blueSpeakerSourceSide;
+        } else {
+            return redSpeakerSourceSide;
         }
     }
 
@@ -124,10 +108,10 @@ public class Map {
      * @return a Pose2d
      */
     public Pose2d getSpeakerAmpSide() {
-        if (redAlliance) {
-            return redSpeakerAmpSide;
-        } else {
+        if (SwerveSubsystem.isBlueAlliance) {
             return blueSpeakerAmpSide;
+        } else {
+            return redSpeakerAmpSide;
         }
     }
 
@@ -136,10 +120,10 @@ public class Map {
      * @return a Pose2d.
      */
     public Pose2d getAmp() {
-        if (redAlliance) {
-            return redAmp;
-        } else {
+        if (SwerveSubsystem.isBlueAlliance) {
             return blueAmp;
+        } else {
+            return redAmp;
         }
     }
 }

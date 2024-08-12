@@ -129,9 +129,13 @@ public class AbsoluteDrive extends Command {
             desiredSpeeds = swerve.getTargetSpeeds(vXspeed, vYspeed, swerve.getHeading().plus(Rotation2d.fromDegrees(20)));
         } else {
             // Get the desired chassis speeds based on a 2 joystick module.
-            desiredSpeeds = swerve.getTargetSpeeds(vXspeed, vYspeed,
-                    headingHorizontal.getAsDouble(),
-                    headingVertical.getAsDouble());
+            /* CHANGES HAVE BEEN MADE BELOW: DIRECTION OF MOTION IS NOW DEPENDENT ON ALLIANCE COLOUR. IF PHOTONVISION IS BEING USED, THE ROBOT WILL AUTO CORRET ITSELF WHEN APRIL TAG IS DETETED */
+            desiredSpeeds = SwerveSubsystem.isBlueAlliance ? 
+                swerve.getTargetSpeeds(vXspeed, vYspeed, headingHorizontal.getAsDouble(), headingVertical.getAsDouble()) :
+                swerve.getTargetSpeeds(-vXspeed, -vYspeed, -headingHorizontal.getAsDouble(), -headingVertical.getAsDouble());
+
+                    
+
         }
 
         // Prevent Movement After Auto

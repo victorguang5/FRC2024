@@ -127,9 +127,9 @@ public class RobotContainer
                 // Applies deadbands and inverts controls because joysticks
                 // are back-right positive while robot
                 // controls are front-left positive
-                () -> MathUtil.applyDeadband(-driverController.getLeftY()/2,
+                () -> MathUtil.applyDeadband(-driverController.getLeftY()/1.75,
                         OperatorConstants.LEFT_Y_DEADBAND),
-                () -> MathUtil.applyDeadband(-driverController.getLeftX()/2,
+                () -> MathUtil.applyDeadband(-driverController.getLeftX()/1.75,
                         OperatorConstants.LEFT_X_DEADBAND),
                 () -> -driverController.getRightX(),
                 () -> -driverController.getRightY(),
@@ -257,9 +257,10 @@ public class RobotContainer
         new JoystickButton(driverController, XboxController.Button.kX.value)
                 .whileTrue(new RepeatCommand(new InstantCommand(drivebase::lock)));
 
+        /* // Item below is not to be used for a drive base using ABSOLUTE COORDINATES on field
         new JoystickButton(driverController, XboxController.Button.kB.value)
                 .onTrue(new InstantCommand(drivebase::resetOdometry));
-
+        */
         
 
         /* // Items are not working as intended and are overriding the important led indication of having a note, GREEN
