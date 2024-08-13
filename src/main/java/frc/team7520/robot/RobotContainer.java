@@ -9,6 +9,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.DoubleTopic;
 import edu.wpi.first.networktables.NetworkTable;
@@ -299,16 +300,12 @@ public class RobotContainer
         //                 ));
 
         /* OTF Path Note using sensor feedback */
-        //new JoystickButton(driverController, XboxController.Button.kY.value).and(intakeSubsystem::getSwitchVal)
-        //        .onTrue(notePickUp());
+        new JoystickButton(driverController, XboxController.Button.kB.value).and(intakeSubsystem::getSwitchVal)
+                .onTrue(notePickUp());
         
         /* OTF Path Shooter timed */
         new JoystickButton(driverController, XboxController.Button.kY.value)
-                //.onTrue(automaticShoot());
-                .onTrue(new InstantCommand(() -> {
-                         var cmd = AutoBuilder.followPath(drivebase.customPath(map.getSpeakerCenter(), new Rotation2d(map.getSpeakerCenter().getRotation().getRadians() + Math.PI), map.getSpeakerCenter().getRotation()));
-                         cmd.schedule();}
-                         ));
+                .onTrue(automaticShoot());
 
         new Trigger(() -> speakerRoutineActivateShooter)
                 .onTrue(new ParallelCommandGroup(
@@ -357,7 +354,7 @@ public class RobotContainer
      */
     public Command notePickUp() {
         return new InstantCommand(() -> {
-                var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(0));
+                var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(0, new Pose2d(), new Rotation2d(), new Rotation2d()));
                 cmd.schedule();                
         }); 
     }
@@ -369,7 +366,12 @@ public class RobotContainer
     public Command automaticShoot() {
         return new SequentialCommandGroup(
                 new InstantCommand(() -> {
-                        var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(1));
+                        var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(
+                                1, 
+                                map.getSpeakerCenter(), 
+                                new Rotation2d(map.getSpeakerCenter().getRotation().getRadians() + Math.PI), 
+                                new Rotation2d(map.getSpeakerCenter().getRotation().getRadians() + Math.PI))
+                        );
                         cmd.schedule();                
                 })
         );

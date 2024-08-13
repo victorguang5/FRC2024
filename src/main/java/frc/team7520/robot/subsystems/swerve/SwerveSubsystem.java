@@ -19,6 +19,7 @@ import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -87,7 +88,7 @@ public class SwerveSubsystem extends SubsystemBase {
     /**
      * TpuSystem
      */
-    public double xdistanceNote, ydistanceNote = 0;
+    public Translation2d notePose = new Translation2d();
     public TpuSystem tpuSystem;
 
     /**
@@ -347,8 +348,8 @@ public class SwerveSubsystem extends SubsystemBase {
      * @deprecated
      */
     public @Deprecated void trigonometricCalculatedDistance(Transform3d measurement) {
-        ydistanceNote = measurement.getX() * Math.sin((getHeading().getRadians())) + measurement.getY() * Math.cos((getHeading().getRadians()));
-        xdistanceNote = - measurement.getY() * Math.sin(Math.abs(getHeading().getRadians())) + measurement.getX() * Math.cos((getHeading().getRadians()));
+        //ydistanceNote = measurement.getX() * Math.sin((getHeading().getRadians())) + measurement.getY() * Math.cos((getHeading().getRadians()));
+        //xdistanceNote = - measurement.getY() * Math.sin(Math.abs(getHeading().getRadians())) + measurement.getX() * Math.cos((getHeading().getRadians()));
     }
 
 
@@ -364,8 +365,7 @@ public class SwerveSubsystem extends SubsystemBase {
         // What if we analyzed component paths as 2d vectors using translation2d?
         Translation2d absoluteVector = new Translation2d(relativeVector.getNorm(), new Rotation2d(getHeading().getRadians() + relativeVector.getAngle().getRadians()));
         //SmartDashboard.putNumber("Absolute Distance to Note", relativeVector.getNorm());
-        xdistanceNote = absoluteVector.getX();
-        ydistanceNote = absoluteVector.getY();
+        notePose = absoluteVector;
     }
 
     @Override
@@ -596,7 +596,7 @@ public class SwerveSubsystem extends SubsystemBase {
          */
         List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
             getPose(), //The Path starts at the position of the robot currently, but first move towards the direction it was facing before it curves to end point. As such, different diretions will give different curves to end point
-            new Pose2d(x + xdistanceNote, y + ydistanceNote, Rotation2d.fromDegrees(direction)) //The end point +1 meter in the x direction and +1 meter in the y direction. Enter the end point with THE PATH FACING 0 degrees
+            new Pose2d(x + 1, y + 1, Rotation2d.fromDegrees(direction)) //The end point +1 meter in the x direction and +1 meter in the y direction. Enter the end point with THE PATH FACING 0 degrees
         );
 
         // Create the path using the bezier points created above
@@ -644,7 +644,7 @@ public class SwerveSubsystem extends SubsystemBase {
      * @param mode 0 for note pickup, 1 for shooter sequence.
      * @return a Path
      */
-    public PathPlannerPath sophisticatedOTFPath(int mode) {
+    public PathPlannerPath sophisticatedOTFPath(int mode, Pose2d destination, Rotation2d startBezier, Rotation2d endBezier) {
         double x = getPose().getX();
         double y = getPose().getY();
         double direction = getHeading().getDegrees();
@@ -653,17 +653,17 @@ public class SwerveSubsystem extends SubsystemBase {
 
         if (mode == 0) {
             /* Note sequence */
-            if (xdistanceNote != 0 && ydistanceNote != 0) {
+            if (notePose.getX() != 0 && notePose.getY() != 0) {
                 List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
                     getPose(), 
-                    new Pose2d(x + xdistanceNote, y + ydistanceNote, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()))
+                    new Pose2d(x + notePose.getX(), y + notePose.getY(), Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()))
                 );
                 EventMarker em = new EventMarker(0, new AutoNotePickUp());
                 EventMarker em3 = new EventMarker(1, new AutoIntake(Position.SHOOT));
                 EventMarker em4 = new EventMarker(1, new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
                 List<EventMarker> lst_em = Arrays.asList(em, em3, em4);
 
-                RotationTarget rt = new RotationTarget(0.5, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()));
+                RotationTarget rt = new RotationTarget(0.2, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()));
                 List<RotationTarget> lst_rt = Arrays.asList(rt);
                 
                 //ConstraintsZone cz = new ConstraintsZone(0.3, 0.6, new PathConstraints(0.05, 0.5, 0.5 * Math.PI, 0.5 * Math.PI));
@@ -686,8 +686,8 @@ public class SwerveSubsystem extends SubsystemBase {
             /* Shooting sequence */
             if (true) { // Change the argument to whether you are in range for the position using Map
                 List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
-                    getPose(), 
-                    new Pose2d(x+1, y, Rotation2d.fromDegrees(-direction)) 
+                    new Pose2d(getPose().getTranslation(), startBezier), 
+                    new Pose2d(destination.getTranslation(), endBezier) 
                 );
 
                 EventMarker em = new EventMarker(0.7, new InstantCommand(() -> {RobotContainer.speakerRoutineActivateShooter = true;})); // THIS COMMAND IS TERMINATED WHEN THE PATH ENDS
@@ -705,7 +705,7 @@ public class SwerveSubsystem extends SubsystemBase {
                     lst_cz,
                     lst_em,
                     new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI),
-                    new GoalEndState(0.0, Rotation2d.fromDegrees(direction)), // change direction to rotation of pose of april tag
+                    new GoalEndState(0.0, destination.getRotation()), // change direction to rotation of pose of april tag
                     false
                 );
 
@@ -716,20 +716,20 @@ public class SwerveSubsystem extends SubsystemBase {
 
         /* If no notes detected or no path to go to */
         List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
-                    getPose(), //The Path starts at the position of the robot currently, but first move towards the direction it was facing before it curves to end point. As such, different diretions will give different curves to end point
-                    new Pose2d(x + 0.1, y, Rotation2d.fromDegrees(direction)) //The end point +1 meter in the x direction and +1 meter in the y direction. Enter the end point with THE PATH FACING 0 degrees
-                );
+            getPose(), //The Path starts at the position of the robot currently, but first move towards the direction it was facing before it curves to end point. As such, different diretions will give different curves to end point
+            new Pose2d(x + 0.1, y, Rotation2d.fromDegrees(direction)) //The end point +1 meter in the x direction and +1 meter in the y direction. Enter the end point with THE PATH FACING 0 degrees
+        );
 
-                // Create the path using the bezier points created above
-                PathPlannerPath path = new PathPlannerPath(
-                    bezierPoints,
-                    new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI), //Global constraints
-                    new GoalEndState(0.0, Rotation2d.fromDegrees(direction)) //End with in the same direction as when the robot was facing when the path started
-                );
+        // Create the path using the bezier points created above
+        PathPlannerPath path = new PathPlannerPath(
+            bezierPoints,
+            new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI), //Global constraints
+            new GoalEndState(0.0, Rotation2d.fromDegrees(direction)) //End with in the same direction as when the robot was facing when the path started
+        );
 
-                // Prevent the path from being flipped if the coordinates are already correct
-                path.preventFlipping =true;
+        // Prevent the path from being flipped if the coordinates are already correct
+        path.preventFlipping =true;
 
-                return path;
+        return path;
     }
 }
