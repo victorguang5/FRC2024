@@ -137,7 +137,7 @@ public class Note {
         angleToApproach = (X_CENTER-xPos)*(X_DPP);
         relativeXDistance = CAM_HEIGHT/(Math.tan(Math.toRadians(yPos*Y_DPP)));
         relativeYDistance = Math.hypot(relativeXDistance, CAM_HEIGHT)*Math.tan(Math.toRadians(angleToApproach));
-        return new Translation2d(relativeXDistance*XDISTANCE_REDUCTION_FACOTR, relativeYDistance + YDISTANCE_OFFSET);
+        return new Translation2d(relativeXDistance*XDISTANCE_REDUCTION_FACOTR, relativeYDistance); //YDISTANCE_OFFSET
     }
 
     /**
@@ -190,7 +190,7 @@ public class Note {
     }
 
     public double getAngleToApporach() {
-        return angleToApproach;
+        return angleToApproach*1.2;
     }
     
 }

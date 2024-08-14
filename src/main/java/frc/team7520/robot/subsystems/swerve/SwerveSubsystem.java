@@ -674,7 +674,7 @@ public class SwerveSubsystem extends SubsystemBase {
                     lst_rt,
                     lst_cz,
                     lst_em,
-                    new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI),
+                    new PathConstraints(1.5, 1.5, 2 * Math.PI, 2 * Math.PI),
                     new GoalEndState(0.0, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach())),
                     false
                 );
@@ -704,7 +704,7 @@ public class SwerveSubsystem extends SubsystemBase {
                     lst_rt,
                     lst_cz,
                     lst_em,
-                    new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI),
+                    new PathConstraints(1.5, 1.5, 2 * Math.PI, 2 * Math.PI),
                     new GoalEndState(0.0, destination.getRotation()), // change direction to rotation of pose of april tag
                     false
                 );

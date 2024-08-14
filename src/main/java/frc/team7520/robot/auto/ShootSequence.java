@@ -17,7 +17,7 @@ public class ShootSequence extends SequentialCommandGroup {
                 new ParallelDeadlineGroup( 
                         new SequentialCommandGroup(
                                 new AutoIntake(Constants.IntakeConstants.Position.SHOOT),
-                                new WaitCommand(0.6),                 
+                                new WaitCommand(0.7),                 
                                 new InstantCommand(() -> IntakeSubsystem.getInstance().setSpeed(0.5)),
                                 new WaitCommand(0.5)
                         ),
