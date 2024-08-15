@@ -304,8 +304,14 @@ public class RobotContainer
                 .onTrue(notePickUp());
         
         /* OTF Path Shooter timed */
-        new JoystickButton(driverController, XboxController.Button.kY.value)
-                .onTrue(automaticShoot());
+        new Trigger(() -> driverController.getPOV() == 0)
+                .onTrue(centralSpeakerShot());
+
+        new Trigger(() -> driverController.getPOV() == 90)
+                .onTrue((SwerveSubsystem.isBlueAlliance ? sourceSpeakerShot() : ampSpeakerShot()));
+        
+        new Trigger(() -> driverController.getPOV() == 270)
+                .onTrue((SwerveSubsystem.isBlueAlliance ? ampSpeakerShot() : sourceSpeakerShot()));
 
         new Trigger(() -> speakerRoutineActivateShooter)
                 .onTrue(new ParallelCommandGroup(
@@ -360,12 +366,11 @@ public class RobotContainer
     }
 
     /**
-     * Runs OTF path to speaker position and shoot sequence, timed
+     * Runs OTF path to center speaker position and shoot sequence, timed
      * @return
      */
-    public Command automaticShoot() {
-        return new SequentialCommandGroup(
-                new InstantCommand(() -> {
+    public Command centralSpeakerShot() {
+                return new InstantCommand(() -> {
                         var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(
                                 1, 
                                 map.getSpeakerCenter(), 
@@ -373,9 +378,38 @@ public class RobotContainer
                                 new Rotation2d(map.getSpeakerCenter().getRotation().getRadians() + Math.PI))
                         );
                         cmd.schedule();                
-                })
-        );
-                
+                });
+    }
+
+    /**
+     * Runs OTF path to amp side speaker position and shoot sequence, timed
+     * @return
+     */
+    public Command ampSpeakerShot() {
+                return new InstantCommand(() -> {
+                        var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(
+                                1, 
+                                map.getSpeakerAmpSide(), 
+                                new Rotation2d(map.getSpeakerAmpSide().getRotation().getRadians() + Math.PI), 
+                                new Rotation2d(map.getSpeakerAmpSide().getRotation().getRadians() + Math.PI))
+                        );
+                        cmd.schedule();                
+                });
+    }
+    /**
+     * Runs OTF path to source side speaker position and shoot sequence, timed
+     * @return
+     */
+    public Command sourceSpeakerShot() {
+                return new InstantCommand(() -> {
+                        var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(
+                                1, 
+                                map.getSpeakerSourceSide(), 
+                                new Rotation2d(map.getSpeakerSourceSide().getRotation().getRadians() + Math.PI), 
+                                new Rotation2d(map.getSpeakerSourceSide().getRotation().getRadians() + Math.PI))
+                        );
+                        cmd.schedule();                
+                });
     }
 
     public void teleOpInit() {

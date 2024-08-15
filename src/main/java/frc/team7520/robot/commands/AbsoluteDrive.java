@@ -118,8 +118,8 @@ public class AbsoluteDrive extends Command {
 
         Boolean speedCutoff = speedCutoffSup.getAsBoolean();
 
-        double vXspeed = vX.getAsDouble() * (speedCutoffSup.getAsBoolean() ? 1 : 1);
-        double vYspeed = vY.getAsDouble() * (speedCutoffSup.getAsBoolean() ? 1 : 1);
+        double vXspeed = vX.getAsDouble() * (SwerveSubsystem.isBlueAlliance ? 1 : -1);
+        double vYspeed = vY.getAsDouble() * (SwerveSubsystem.isBlueAlliance ? 1 : -1);
 
         ChassisSpeeds desiredSpeeds;
 
@@ -132,7 +132,7 @@ public class AbsoluteDrive extends Command {
             /* CHANGES HAVE BEEN MADE BELOW: DIRECTION OF MOTION IS NOW DEPENDENT ON ALLIANCE COLOUR. IF PHOTONVISION IS BEING USED, THE ROBOT WILL AUTO CORRET ITSELF WHEN APRIL TAG IS DETETED */
             desiredSpeeds = SwerveSubsystem.isBlueAlliance ? 
                 swerve.getTargetSpeeds(vXspeed, vYspeed, headingHorizontal.getAsDouble(), headingVertical.getAsDouble()) :
-                swerve.getTargetSpeeds(-vXspeed, -vYspeed, -headingHorizontal.getAsDouble(), -headingVertical.getAsDouble());
+                swerve.getTargetSpeeds(vXspeed, vYspeed, -headingHorizontal.getAsDouble(), -headingVertical.getAsDouble());
 
                     
 

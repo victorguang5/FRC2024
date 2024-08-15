@@ -38,13 +38,13 @@ public class Map {
      * ** Keep in mind that intake is the head! **
      */
     private Pose2d redSpeakerCenter = new Pose2d(15.2, 5.5, new Rotation2d(Math.toRadians(180)));
-    private Pose2d redSpeakerSourceSide = new Pose2d(15.4, 5.5, new Rotation2d(Math.toRadians(-120)));
-    private Pose2d redSpeakerAmpSide = new Pose2d(15.4, 6.6, new Rotation2d(Math.toRadians(120)));
+    private Pose2d redSpeakerSourceSide = new Pose2d(15.8, 4.3, new Rotation2d(Math.toRadians(-120)));
+    private Pose2d redSpeakerAmpSide = new Pose2d(15.8, 6.6, new Rotation2d(Math.toRadians(120)));
     private Pose2d redAmp = new Pose2d();
 
     private Pose2d blueSpeakerCenter = new Pose2d(1.3, 5.5, new Rotation2d(0));
-    private Pose2d blueSpeakerSourceSide = new Pose2d(1.1, 5.5, new Rotation2d(Math.toRadians(-60)));
-    private Pose2d blueSpeakerAmpSide = new Pose2d(1.1, 6.6, new Rotation2d(Math.toRadians(60)));
+    private Pose2d blueSpeakerSourceSide = new Pose2d(0.7, 4.3, new Rotation2d(Math.toRadians(-60)));
+    private Pose2d blueSpeakerAmpSide = new Pose2d(0.7, 6.6, new Rotation2d(Math.toRadians(60)));
     private Pose2d blueAmp = new Pose2d();
     
     /* 
