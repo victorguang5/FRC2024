@@ -265,44 +265,26 @@ public class RobotContainer
         new JoystickButton(driverController, XboxController.Button.kB.value)
                 .onTrue(new InstantCommand(drivebase::resetOdometry));
         */
-        
 
-        /* // Items are not working as intended and are overriding the important led indication of having a note, GREEN
-        
-        new Trigger(() -> intake.currPosition == Position.INTAKE)
-                .and(new JoystickButton(operatorController, XboxController.Button.kRightBumper.value))
-                .onTrue(new RepeatCommand(LEDSubsystem.intaking()))
-                .onFalse(LEDSubsystem.idle());
-
-        new Trigger(() -> intake.currPosition == Position.INTAKE)
-                .and(new JoystickButton(operatorController, XboxController.Button.kX.value))
-                .whileTrue(new RepeatCommand(LEDSubsystem.intaking()))
-                .onFalse(LEDSubsystem.idle());
-        */
-
+        /* Green when note is in, yellow when note detected, rainbow for neither */
         new Trigger(intakeSubsystem::getSwitchVal)
                 .whileFalse(new RepeatCommand(LEDSubsystem.noteIn()))
-                .onTrue(LEDSubsystem.idle());
-
+                .onTrue(drivebase.getNoteAvailable() ? LEDSubsystem.noteAvailable() : LEDSubsystem.idle());
         
-        /* OTF Path simple testing */
-        // new JoystickButton(driverController, XboxController.Button.kY.value)
-        //         .onTrue(new InstantCommand(() -> {
-        //                 var cmd = AutoBuilder.followPath(drivebase.robinPath());
-        //                 cmd.schedule();}
-        //                 ));
-
-        /* OTF Path with timed event markers */
-        // new JoystickButton(driverController, XboxController.Button.kY.value)
-        //         .onTrue(new InstantCommand(() -> {
-        //                 var cmd = AutoBuilder.followPath(drivebase.seanOTFPath());
-        //                 cmd.schedule();}
-        //                 ));
-
         /* OTF Path Note using sensor feedback */
         new JoystickButton(driverController, XboxController.Button.kB.value).and(intakeSubsystem::getSwitchVal)
-                .onTrue(notePickUp());
-        
+                .onTrue(notePickUp(false));
+
+        /* If joysticks are moved while a path is in session, the path is overrided */
+        new Trigger(() -> SwerveSubsystem.pathActive)
+                .and(() -> (Math.abs(driverController.getLeftX()) > 0.2 || Math.abs(driverController.getLeftY()) > 0.2 || Math.abs(driverController.getRightX()) > 0.2 || Math.abs(driverController.getRightY()) > 0.2))
+                .onTrue(new InstantCommand(() -> {
+                                var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(-1, new Pose2d(), new Rotation2d(), new Rotation2d()));
+                                cmd.schedule();
+
+                        }));
+
+
         /* OTF Path Shooter timed */
         new Trigger(() -> driverController.getPOV() == 0)
                 .onTrue(centralSpeakerShot());
@@ -358,11 +340,22 @@ public class RobotContainer
      * Runs OTF path to note and full intake sequence using sensor in parallel
      * @return the command for autoNotePickUp
      */
-    public Command notePickUp() {
-        return new InstantCommand(() -> {
-                var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(0, new Pose2d(), new Rotation2d(), new Rotation2d()));
-                cmd.schedule();                
-        }); 
+    public Command notePickUp(boolean doubleCheck) {
+        if (doubleCheck) {
+                return new InstantCommand(() -> {
+                                var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(0, new Pose2d(), new Rotation2d(), new Rotation2d()));
+                                cmd.schedule();
+
+                        }).until(() -> !SwerveSubsystem.pathActive)
+                        .andThen(notePickUp(false))
+                        .onlyIf(intakeSubsystem::getSwitchVal);
+        } else {
+                return new InstantCommand(() -> {
+                        var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(0, new Pose2d(), new Rotation2d(), new Rotation2d()));
+                        cmd.schedule();                
+                });
+        }
+         
     }
 
     /**

@@ -90,12 +90,15 @@ public class SwerveSubsystem extends SubsystemBase {
      */
     public Translation2d notePose = new Translation2d();
     public TpuSystem tpuSystem;
+    public boolean noteAvailable = false;
 
     /**
      * ABSOLUTE COORDINATE variables. Used by other classes.
      */
     public static boolean isBlueAlliance = false;
     private boolean driverStationReady = false;
+
+    public static boolean pathActive = false;
 
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
@@ -158,6 +161,10 @@ public class SwerveSubsystem extends SubsystemBase {
         swerveDrive.setMotorIdleMode(true);
 
         setupPathPlanner();
+    }
+
+    public boolean getNoteAvailable() {
+        return noteAvailable;
     }
 
     /**
@@ -286,21 +293,6 @@ public class SwerveSubsystem extends SubsystemBase {
         }
         
         /** Photonvision stuff */
-        // var result = camera.getLatestResult();
-        // boolean hasTargets = result.hasTargets();
-        // id = -1;
-        // if (hasTargets) {
-        //     PhotonTrackedTarget target = result.getBestTarget();
-        //     //yaw = target.getYaw();
-        //     //pitch = target.getPitch();
-        //     //area = target.getArea();
-        //     id = target.getFiducialId();
-        //     /** Transform3d only works when that resolution size for processing stream has been trained/calibrated. */
-        //     Transform3d measurement = target.getBestCameraToTarget();
-        //     Pose2d updatedPose = map.updateRobotPose(id, measurement);
-        //     vectorCalculatedDistanceTag(measurement);
-        // }
-        
         if (aprilTagSystem.initiateAprilTagLayout()) {
             Pose2d updatedPose = aprilTagSystem.getCurrentRobotFieldPose();
             if (updatedPose != null && counter > 1) {
@@ -319,6 +311,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
         /** Note Detection Stuff */
         tpuSystem.periodic();
+        SmartDashboard.putBoolean("CAN PRESS NOTE BUTTON?", noteAvailable);
         // Be AWARE that xdistanceNote and ydistanceNote MAY BE USED FOR APRIL TAGS
         Translation2d relativeNoteLocation = tpuSystem.getBestNoteLocation();
         vectorCalculatedDistanceNote(relativeNoteLocation);
@@ -330,6 +323,7 @@ public class SwerveSubsystem extends SubsystemBase {
         //SmartDashboard.putBoolean("Detected!", hasTargets);
         //SmartDashboard.putNumber("Yaw", yaw);
     }
+
 
     /**
      * Calculates the coordinates for the robot to move to an april tag, field relative. This method attempts to take the heading into account.
@@ -366,6 +360,7 @@ public class SwerveSubsystem extends SubsystemBase {
         Translation2d absoluteVector = new Translation2d(relativeVector.getNorm(), new Rotation2d(getHeading().getRadians() + relativeVector.getAngle().getRadians()));
         //SmartDashboard.putNumber("Absolute Distance to Note", relativeVector.getNorm());
         notePose = absoluteVector;
+        noteAvailable = !(notePose.getX() == 0 && notePose.getY() == 0);
     }
 
     @Override
@@ -613,32 +608,6 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     /**
-     * Creates a path to the given destination. The rotational aspect of destination is the end goal state direction
-     * @param destination a Pose2d
-     * @param startBezier
-     * @param endBezier
-     * @return a path
-     */
-    public PathPlannerPath customPath(Pose2d destination, Rotation2d startBezier, Rotation2d endBezier) {        
-        List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
-            new Pose2d(getPose().getX(), getPose().getY(), startBezier), 
-            new Pose2d(destination.getX(), destination.getY(), endBezier) 
-        );
-
-        // Create the path using the bezier points created above
-        PathPlannerPath path = new PathPlannerPath(
-            bezierPoints,
-            new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI), //Global constraints
-            new GoalEndState(0.0, destination.getRotation()) //End with in the same direction as when the robot was facing when the path started
-        );
-
-        // Prevent the path from being flipped if the coordinates are already correct
-        path.preventFlipping =true;
-
-        return path;
-    }
-
-    /**
      * Creates an OTF path containing events, rotation targets, and specific constraint zones where required. Used for autonomous actions. If no note
      * is detected, or the wanted position is not available for any reason, the path will only be 0.1m forward.
      * @param mode 0 for note pickup, 1 for shooter sequence.
@@ -653,15 +622,25 @@ public class SwerveSubsystem extends SubsystemBase {
 
         if (mode == 0) {
             /* Note sequence */
-            if (notePose.getX() != 0 && notePose.getY() != 0) {
-                List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
-                    getPose(), 
-                    new Pose2d(x + notePose.getX(), y + notePose.getY(), Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()))
-                );
+            if (noteAvailable) {
+                pathActive = true;
+                List<Translation2d> bezierPoints;
+                if (Math.abs(notePose.getDistance(getPose().getTranslation())) < 1) {
+                    bezierPoints = PathPlannerPath.bezierFromPoses(
+                        new Pose2d(getPose().getTranslation(), new Rotation2d(getHeading().getRadians() + Math.PI)), 
+                        new Pose2d(x + notePose.getX(), y + notePose.getY(), Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()))
+                    );
+                } else {
+                    bezierPoints = PathPlannerPath.bezierFromPoses(
+                        getPose(), 
+                        new Pose2d(x + notePose.getX(), y + notePose.getY(), Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()))
+                    );
+                }
                 EventMarker em = new EventMarker(0, new AutoNotePickUp());
                 EventMarker em3 = new EventMarker(1, new AutoIntake(Position.SHOOT));
                 EventMarker em4 = new EventMarker(1, new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
-                List<EventMarker> lst_em = Arrays.asList(em, em3, em4);
+                EventMarker signalEnd = new EventMarker(1, new InstantCommand(() -> {pathActive = false;}));
+                List<EventMarker> lst_em = Arrays.asList(em, em3, em4, signalEnd);
 
                 RotationTarget rt = new RotationTarget(0.2, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()));
                 List<RotationTarget> lst_rt = Arrays.asList(rt);
@@ -683,6 +662,7 @@ public class SwerveSubsystem extends SubsystemBase {
                 return path;
             }
         } else if (mode == 1) {
+            pathActive = true;
             /* Shooting sequence */
             if (true) { // Change the argument to whether you are in range for the position using Map
                 List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
@@ -691,7 +671,8 @@ public class SwerveSubsystem extends SubsystemBase {
                 );
 
                 EventMarker em = new EventMarker(0.7, new InstantCommand(() -> {RobotContainer.speakerRoutineActivateShooter = true;})); // THIS COMMAND IS TERMINATED WHEN THE PATH ENDS
-                List<EventMarker> lst_em = Arrays.asList(em);
+                EventMarker signalEnd = new EventMarker(1, new InstantCommand(() -> {pathActive = false;})); // THIS COMMAND IS TERMINATED WHEN THE PATH ENDS
+                List<EventMarker> lst_em = Arrays.asList(em, signalEnd);
             
                 //RotationTarget rt = new RotationTarget(0.5, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()));
                 List<RotationTarget> lst_rt = Arrays.asList();

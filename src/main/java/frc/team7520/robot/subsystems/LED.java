@@ -26,6 +26,7 @@ public class LED extends SubsystemBase {
     public final Animation idleAnimation = new RainbowAnimation(255, 0.75, 100);
     private final Animation intakingAnimation = new ColorFlowAnimation(255, 165, 0, 0, 0.75, 100, Direction.Forward);
     private final Animation noteIn = new ColorFlowAnimation(0, 255, 0, 0, 0.75, 100, Direction.Forward);
+    private final Animation noteAvailable = new ColorFlowAnimation(255, 165, 0, 0, 0.9, 100, Direction.Forward);
 
     /**
      * Returns the Singleton instance of this LED. This static method
@@ -66,6 +67,14 @@ public class LED extends SubsystemBase {
         return new InstantCommand(
             () -> {
                 candle.animate(noteIn);
+            }
+        );
+    }
+
+    public InstantCommand noteAvailable() {
+        return new InstantCommand(
+            () -> {
+                candle.animate(noteAvailable);
             }
         );
     }

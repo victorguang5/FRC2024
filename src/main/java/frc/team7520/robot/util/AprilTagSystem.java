@@ -97,7 +97,9 @@ public class AprilTagSystem {
 
     public void periodic(Pose2d robotPose) {
         this.robotPose = robotPose;
-        //System.out.println(aprilTagLayoutLoaded);
+        isOpen = camera.isConnected();
+        SmartDashboard.putBoolean("PHOTONVISION CONNECTED?", isOpen);
+
     }
 
     /** 
