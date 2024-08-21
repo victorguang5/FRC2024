@@ -139,8 +139,7 @@ public class RobotContainer
                 () -> -driverController.getRightY(),
                 driverController::getRightBumper,
                 driverController::getLeftBumper,
-                () -> false,
-                StrTopic
+                () -> false
         );
 
          shooter = new Shooter(shooterSubsystem,
