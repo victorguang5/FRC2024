@@ -37,15 +37,29 @@ public class Map {
      * 
      * ** Keep in mind that intake is the head! **
      */
-    private Pose2d redSpeakerCenter = new Pose2d(15.2, 5.5, new Rotation2d(Math.toRadians(180)));
+    private Pose2d redSpeakerCenter = new Pose2d(15.2, 5.55, new Rotation2d(Math.toRadians(180)));
     private Pose2d redSpeakerSourceSide = new Pose2d(15.8, 4.3, new Rotation2d(Math.toRadians(-120)));
-    private Pose2d redSpeakerAmpSide = new Pose2d(15.8, 6.6, new Rotation2d(Math.toRadians(120)));
-    private Pose2d redAmp = new Pose2d();
+    private Pose2d redSpeakerAmpSide = new Pose2d(15.8, 6.8, new Rotation2d(Math.toRadians(120)));
 
-    private Pose2d blueSpeakerCenter = new Pose2d(1.3, 5.5, new Rotation2d(0));
+    private Pose2d redAmp = new Pose2d(14.7, 7.77, new Rotation2d(Math.toRadians(90)));
+    private Pose2d redSource = new Pose2d(1.34, 0.56, new Rotation2d(Math.toRadians(60)));
+    private Pose2d redUnderStage = new Pose2d(4.98, 4.1, new Rotation2d(Math.toRadians(0)));
+
+    private Pose2d blueSpeakerCenter = new Pose2d(1.3, 5.55, new Rotation2d(0));
     private Pose2d blueSpeakerSourceSide = new Pose2d(0.7, 4.3, new Rotation2d(Math.toRadians(-60)));
-    private Pose2d blueSpeakerAmpSide = new Pose2d(0.7, 6.6, new Rotation2d(Math.toRadians(60)));
-    private Pose2d blueAmp = new Pose2d();
+    private Pose2d blueSpeakerAmpSide = new Pose2d(0.7, 6.8, new Rotation2d(Math.toRadians(60)));
+    
+    private Pose2d blueAmp = new Pose2d(1.8, 7.77, new Rotation2d(Math.toRadians(90)));
+    private Pose2d blueSource = new Pose2d(16.06, 0.56, new Rotation2d(Math.toRadians(120)));
+    private Pose2d blueUnderStage = new Pose2d(11.56, 4.1, new Rotation2d(Math.toRadians(0)));
+
+    private Pose2d centerNoteSource = new Pose2d(8.27, 0.75, new Rotation2d(Math.toRadians(0)));
+    private Pose2d centerNoteSM = new Pose2d(8.27, 2.42, new Rotation2d(Math.toRadians(0)));
+    private Pose2d centerNoteMiddle = new Pose2d(8.27, 4.1, new Rotation2d(Math.toRadians(0)));
+    private Pose2d centerNoteAM = new Pose2d(8.27, 5.78, new Rotation2d(Math.toRadians(0)));
+    private Pose2d centerNoteAmp = new Pose2d(8.27, 7.46, new Rotation2d(Math.toRadians(0)));
+
+
     
     /* 
     final private Pose2d AT1 = new Pose2d(new Translation2d(15.079472, 0.245872), new Rotation2d(Math.toRadians(120))); // B SOURCE 

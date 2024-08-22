@@ -82,7 +82,7 @@ public class SwerveSubsystem extends SubsystemBase {
     /**
      * AprilTagSystem
      */
-    public AprilTagSystem aprilTagSystem = new AprilTagSystem("Arducam_OV9281_USB_Camera");
+    public AprilTagSystem aprilTagSystem = new AprilTagSystem("AprilCam");
     int counter = 0;
     
     /**
@@ -625,21 +625,28 @@ public class SwerveSubsystem extends SubsystemBase {
             if (noteAvailable) {
                 pathActive = true;
                 List<Translation2d> bezierPoints;
-                if (Math.abs(notePose.getDistance(getPose().getTranslation())) < 1) {
+                double globalVelocity = 1.5;
+                //int poseNumOfExtra = 0;
+                //System.out.println(Math.abs(notePose.getDistance(getPose().getTranslation())));
+                if (Math.abs(notePose.getNorm()) < 1.3) {
                     bezierPoints = PathPlannerPath.bezierFromPoses(
-                        new Pose2d(getPose().getTranslation(), new Rotation2d(getHeading().getRadians() + Math.PI)), 
+                        new Pose2d(getPose().getTranslation(), Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach() + 180)), 
+                        //new Pose2d(x - notePose.getX()/4, y - notePose.getY()/4, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach())),
                         new Pose2d(x + notePose.getX(), y + notePose.getY(), Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()))
                     );
+                    globalVelocity = 0.7;
+                    //poseNumOfExtra = 1;
                 } else {
                     bezierPoints = PathPlannerPath.bezierFromPoses(
-                        getPose(), 
+                        getPose(),
+                        //new Pose2d(x + notePose.getX()/2, y + notePose.getY()/2, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach())), 
                         new Pose2d(x + notePose.getX(), y + notePose.getY(), Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()))
                     );
                 }
                 EventMarker em = new EventMarker(0, new AutoNotePickUp());
                 EventMarker em3 = new EventMarker(1, new AutoIntake(Position.SHOOT));
                 EventMarker em4 = new EventMarker(1, new InstantCommand(() -> intakeSubsystem.setSpeed(0)));
-                EventMarker signalEnd = new EventMarker(1, new InstantCommand(() -> {pathActive = false;}));
+                EventMarker signalEnd = new EventMarker(0.95, new InstantCommand(() -> {pathActive = false;}));
                 List<EventMarker> lst_em = Arrays.asList(em, em3, em4, signalEnd);
 
                 RotationTarget rt = new RotationTarget(0.2, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach()));
@@ -653,7 +660,7 @@ public class SwerveSubsystem extends SubsystemBase {
                     lst_rt,
                     lst_cz,
                     lst_em,
-                    new PathConstraints(1.5, 1.5, 2 * Math.PI, 2 * Math.PI),
+                    new PathConstraints(1.5, globalVelocity, 2 * Math.PI, 2 * Math.PI),
                     new GoalEndState(0.0, Rotation2d.fromDegrees(direction + tpuSystem.getBestNoteAngleToApproach())),
                     false
                 );
@@ -698,19 +705,29 @@ public class SwerveSubsystem extends SubsystemBase {
         /* If no notes detected or no path to go to */
         List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
             getPose(), //The Path starts at the position of the robot currently, but first move towards the direction it was facing before it curves to end point. As such, different diretions will give different curves to end point
-            new Pose2d(x + 0.1, y, Rotation2d.fromDegrees(direction)) //The end point +1 meter in the x direction and +1 meter in the y direction. Enter the end point with THE PATH FACING 0 degrees
+            new Pose2d(x + 0.01, y, Rotation2d.fromDegrees(direction)) //The end point +1 meter in the x direction and +1 meter in the y direction. Enter the end point with THE PATH FACING 0 degrees
         );
 
         // Create the path using the bezier points created above
+        EventMarker em = new EventMarker(1, new AutoIntake(Position.SHOOT));
+        EventMarker em2 = new EventMarker(1, new InstantCommand(() -> intakeSubsystem.setSpeed(0))); 
+        List<EventMarker> lst_em = Arrays.asList(em, em2);
+       
+        List<RotationTarget> lst_rt = Arrays.asList();
+        List<ConstraintsZone> lst_cz = Arrays.asList();
         PathPlannerPath path = new PathPlannerPath(
             bezierPoints,
+            lst_rt,
+            lst_cz,
+            lst_em,
             new PathConstraints(1.0, 1.0, 2 * Math.PI, 2 * Math.PI), //Global constraints
-            new GoalEndState(0.0, Rotation2d.fromDegrees(direction)) //End with in the same direction as when the robot was facing when the path started
+            new GoalEndState(0.0, Rotation2d.fromDegrees(direction)), //End with in the same direction as when the robot was facing when the path started
+            false
         );
 
         // Prevent the path from being flipped if the coordinates are already correct
         path.preventFlipping =true;
-
+        pathActive = false;
         return path;
     }
 }

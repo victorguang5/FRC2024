@@ -267,8 +267,13 @@ public class RobotContainer
 
         /* Green when note is in, yellow when note detected, rainbow for neither */
         new Trigger(intakeSubsystem::getSwitchVal)
-                .whileFalse(new RepeatCommand(LEDSubsystem.noteIn()))
-                .onTrue(drivebase.getNoteAvailable() ? LEDSubsystem.noteAvailable() : LEDSubsystem.idle());
+               .whileFalse(new RepeatCommand(LEDSubsystem.noteIn()))
+                .onTrue(LEDSubsystem.idle());
+
+        new Trigger(drivebase::getNoteAvailable).and(intakeSubsystem::getSwitchVal)
+                .whileTrue(new RepeatCommand(LEDSubsystem.noteAvailable()));
+
+
         
         /* OTF Path Note using sensor feedback */
         new JoystickButton(driverController, XboxController.Button.kB.value).and(intakeSubsystem::getSwitchVal)
@@ -344,14 +349,15 @@ public class RobotContainer
                 return new InstantCommand(() -> {
                                 var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(0, new Pose2d(), new Rotation2d(), new Rotation2d()));
                                 cmd.schedule();
-
+                                SwerveSubsystem.pathActive = true;
                         }).until(() -> !SwerveSubsystem.pathActive)
                         .andThen(notePickUp(false))
                         .onlyIf(intakeSubsystem::getSwitchVal);
         } else {
                 return new InstantCommand(() -> {
                         var cmd = AutoBuilder.followPath(drivebase.sophisticatedOTFPath(0, new Pose2d(), new Rotation2d(), new Rotation2d()));
-                        cmd.schedule();                
+                        cmd.schedule();          
+                        System.out.println("AGAIN!!!!!!!!");      
                 });
         }
          

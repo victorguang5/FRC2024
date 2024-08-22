@@ -52,7 +52,7 @@ public final class Constants {
     }
 
     public static class Swerve {
-        public static final double DRIVE_GEAR_RATIO = 6.7; //6.7 previously for kraken/neo swerve3, 8.6 for swerve2 before it was changed
+        public static final double DRIVE_GEAR_RATIO = 4.9; //6.7 previously for kraken/neo swerve3, 8.6 for swerve2 before it was changed
         public static final double ANGLE_GEAR_RATIO = 150/7d;
     }
 

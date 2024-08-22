@@ -1,6 +1,10 @@
 package frc.team7520.robot.subsystems;
 
 
+import java.time.Instant;
+
+import org.ejml.dense.block.decomposition.chol.CholeskyOuterForm_DDRB;
+
 import com.ctre.phoenix.led.*;
 import com.ctre.phoenix.led.ColorFlowAnimation.Direction;
 
@@ -25,8 +29,9 @@ public class LED extends SubsystemBase {
 
     public final Animation idleAnimation = new RainbowAnimation(255, 0.75, 100);
     private final Animation intakingAnimation = new ColorFlowAnimation(255, 165, 0, 0, 0.75, 100, Direction.Forward);
-    private final Animation noteIn = new ColorFlowAnimation(0, 255, 0, 0, 0.75, 100, Direction.Forward);
-    private final Animation noteAvailable = new ColorFlowAnimation(255, 165, 0, 0, 0.9, 100, Direction.Forward);
+    private final Animation noteIn = new ColorFlowAnimation(0, 255, 0, 0, 0.9, 100, Direction.Forward);
+    private final Animation noteAvailable = new ColorFlowAnimation(255, 165, 0, 0, 0.95, 100, Direction.Forward);
+    private final Animation idle2 = new ColorFlowAnimation(0, 0, 255, 200, 0.8, 100, Direction.Backward);
 
     /**
      * Returns the Singleton instance of this LED. This static method
@@ -50,7 +55,15 @@ public class LED extends SubsystemBase {
     public Command idle() {
         return run(
             () -> {
-                candle.animate(idleAnimation);
+                candle.animate(idle2);
+            }
+        );
+    }
+
+    public InstantCommand idle2() {
+        return new InstantCommand(
+            () -> {
+                candle.animate(idle2);
             }
         );
     }

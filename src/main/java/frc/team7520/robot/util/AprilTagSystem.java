@@ -85,7 +85,6 @@ public class AprilTagSystem {
     }
 
     public AprilTagSystem(String cameraName) {
-        periodic(robotPose);
         this.cameraName = cameraName;        
         camera = new PhotonCamera(cameraName);
         if(camera.isConnected()) {
@@ -93,6 +92,7 @@ public class AprilTagSystem {
         } else {
             System.out.printf("Failed to open camera: %s \n", cameraName);
         }
+        periodic(robotPose);
     }
 
     public void periodic(Pose2d robotPose) {
@@ -143,11 +143,11 @@ public class AprilTagSystem {
          * 
          * -Robin
          */
-        double CAMERA_POS_FOR_ROBOT_X = -0.254; // Meters
+        double CAMERA_POS_FOR_ROBOT_X = -0.26; // Meters
         double CAMERA_POS_FOR_ROBOT_Y = 0;
         double CAMERA_POS_FOR_ROBOT_Z = 0.6858;
         double CAMERA_POS_FOR_ROBOT_ROLL = 0;
-        double CAMERA_POS_FOR_ROBOT_PITCH = -Math.toRadians(35); // Radians
+        double CAMERA_POS_FOR_ROBOT_PITCH = -Math.toRadians(21); // Radians
         double CAMERA_POS_FOR_ROBOT_YAW = Math.PI;
 
         Transform3d robotToCamera = new Transform3d(CAMERA_POS_FOR_ROBOT_X, 
