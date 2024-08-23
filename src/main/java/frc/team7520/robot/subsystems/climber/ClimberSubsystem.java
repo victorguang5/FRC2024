@@ -104,9 +104,17 @@ public class ClimberSubsystem extends SubsystemBase {
          rightClimberMotor.set(speed);
     }
 
+    public double getLeftSpeed(){
+         return leftClimberMotor.get();
+    }
+
+    public double getRightSpeed(){
+         return rightClimberMotor.get();
+    }
+
     public void setZeroPos() {
         leftClimberEncoder.setPosition(ClimberConstants.maxPosition);
-        rightClimberEncoder.setPosition(ClimberConstants.maxPosition);
+        rightClimberEncoder.setPosition(-ClimberConstants.maxPosition);
         leftClimberPID.setReference(ClimberConstants.maxPosition, CANSparkMax.ControlType.kPosition);
         rightClimberPID.setReference(ClimberConstants.maxPosition, CANSparkMax.ControlType.kPosition);
     }

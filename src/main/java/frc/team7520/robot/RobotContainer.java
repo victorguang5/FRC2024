@@ -29,6 +29,7 @@ import frc.team7520.robot.Constants.IntakeConstants.Position;
 import frc.team7520.robot.Constants.OperatorConstants;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.team7520.robot.auto.AutoClimber;
 import frc.team7520.robot.auto.AutoIntake;
 import frc.team7520.robot.auto.AutoNotePickUp;
 import frc.team7520.robot.auto.AutoShoot;
@@ -148,15 +149,18 @@ public class RobotContainer
                 operatorController::getLeftBumper
         );
 
-
-        Climber climber = new Climber(climberSubsystem,
-                () -> false,
-                () -> false,
-                operatorController::getStartButton,
-                operatorController::getRightY,
-                operatorController::getLeftY,
-                operatorController::getBackButton
+        AutoClimber climber = new AutoClimber(climberSubsystem,
+                operatorController::getYButtonReleased
         );
+
+        // Climber climber = new Climber(climberSubsystem,
+        //         () -> false,
+        //         () -> false,
+        //         operatorController::getStartButton,
+        //         operatorController::getRightY,
+        //         operatorController::getLeftY,
+        //         operatorController::getBackButton
+        // );
         // Intake intake = new Intake(intakeSubsystem,
         //         operatorController::getRightBumper,
         //         operatorController::getYButton,
