@@ -112,6 +112,14 @@ public class ClimberSubsystem extends SubsystemBase {
          return rightClimberMotor.get();
     }
 
+    public double getLeftOutputCurrent(){
+        return leftClimberMotor.getOutputCurrent();
+    }
+
+    public double getRightOutputCurrent(){
+        return rightClimberMotor.getOutputCurrent();
+    }
+
     public void setZeroPos() {
         leftClimberEncoder.setPosition(ClimberConstants.maxPosition);
         rightClimberEncoder.setPosition(-ClimberConstants.maxPosition);

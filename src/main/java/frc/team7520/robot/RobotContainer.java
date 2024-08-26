@@ -150,7 +150,7 @@ public class RobotContainer
         );
 
         AutoClimber climber = new AutoClimber(climberSubsystem,
-                operatorController::getYButtonReleased
+                driverController::getYButtonReleased
         );
 
         // Climber climber = new Climber(climberSubsystem,

@@ -16,6 +16,16 @@ import frc.team7520.robot.subsystems.climber.ClimberSubsystem;
 public class AutoClimber extends Command {
     private final ClimberSubsystem subsystem;
     private BooleanSupplier bActionButtonClicked;
+    private double climberSpeed = 0.8;
+
+    private double maxLeftOutputCurrent = 0;
+    private double minLeftOutputCurrent = 100;
+
+    private double maxRightOutputCurrent = 0;
+    private double minRightOutputCurrent = 100;
+
+    private double leftOutputCurrentCap = 150; // 77.21875
+    private double rightOutputCurrentCap = 150; // 92.8175
 
     enum State {
         NOTHING,
@@ -84,6 +94,25 @@ int clickCount = 0;
         this.curState = State.NOTHING;
     }
 
+    void DetectMaxMinOutputCurrent()
+    {        
+        double leftOutputCurrent = subsystem.getLeftOutputCurrent();
+        double rightOutputCurrent = subsystem.getRightOutputCurrent();
+
+        SmartDashboard.putNumber("Climber Left Output Current", leftOutputCurrent);
+        SmartDashboard.putNumber("Climber Right Output Current", rightOutputCurrent);
+
+        if (leftOutputCurrent > maxLeftOutputCurrent) maxLeftOutputCurrent = leftOutputCurrent;
+        if (leftOutputCurrent < minLeftOutputCurrent) minLeftOutputCurrent = leftOutputCurrent;
+        if (rightOutputCurrent > maxRightOutputCurrent) maxRightOutputCurrent = rightOutputCurrent;
+        if (rightOutputCurrent < minRightOutputCurrent) minRightOutputCurrent = rightOutputCurrent;
+
+        SmartDashboard.putNumber("Climber Left Max Output Current", maxLeftOutputCurrent);
+        SmartDashboard.putNumber("Climber Left Min Output Current", minLeftOutputCurrent);
+        SmartDashboard.putNumber("Climber Right Max Output Current", maxRightOutputCurrent);
+        SmartDashboard.putNumber("Climber Right Min Output Current", minRightOutputCurrent);
+    }
+
     void Extend()
     {
         double leftPosition = subsystem.getLeftPosition();
@@ -92,15 +121,22 @@ int clickCount = 0;
         SmartDashboard.putNumber("Climber Left Position", leftPosition);
         SmartDashboard.putNumber("Climber Right Position", rightPosition);
 
+        DetectMaxMinOutputCurrent();
+
         subsystem.setLeftArmReference(0);
         subsystem.setRightArmReference(-0);
 
         Boolean leftStopped = false;
         Boolean rightStopped = false;
 
-        if (leftPosition > 0)
+        if (leftOutputCurrentCap > leftOutputCurrentCap)
         {
-            subsystem.setLeftSpeed(-0.5);
+            subsystem.setLeftSpeed(0);
+            leftStopped = true;
+        }
+        else if (leftPosition > 0)
+        {
+            subsystem.setLeftSpeed(-climberSpeed);
         }
         else
         {
@@ -108,9 +144,14 @@ int clickCount = 0;
             leftStopped = true;
         }
 
-        if (rightPosition < 0)
+        if (rightOutputCurrentCap > rightOutputCurrentCap)
         {
-            subsystem.setRightSpeed(0.5);
+            subsystem.setRightSpeed(0);
+            rightStopped = true;
+        }
+        else if (rightPosition < 0)
+        {
+            subsystem.setRightSpeed(climberSpeed);
         }
         else
         {
@@ -134,15 +175,22 @@ int clickCount = 0;
         SmartDashboard.putNumber("Climber Left Position", leftPosition);
         SmartDashboard.putNumber("Climber Right Position", rightPosition);
 
+        DetectMaxMinOutputCurrent();
+
         subsystem.setLeftArmReference(ClimberConstants.maxPosition);
         subsystem.setRightArmReference(-ClimberConstants.maxPosition);
 
         Boolean leftStopped = false;
         Boolean rightStopped = false;
 
-        if (leftPosition < ClimberConstants.maxPosition)
+        if (leftOutputCurrentCap > leftOutputCurrentCap)
         {
-            subsystem.setLeftSpeed(0.5);
+            subsystem.setLeftSpeed(0);
+            leftStopped = true;
+        }
+        else if (leftPosition < ClimberConstants.maxPosition)
+        {
+            subsystem.setLeftSpeed(climberSpeed);
         }
         else
         {
@@ -150,9 +198,14 @@ int clickCount = 0;
             leftStopped = true;
         }
 
-        if (rightPosition > -ClimberConstants.maxPosition)
+        if (rightOutputCurrentCap > rightOutputCurrentCap)
         {
-            subsystem.setRightSpeed(-0.5);
+            subsystem.setRightSpeed(0);
+            rightStopped = true;
+        }
+        else if (rightPosition > -ClimberConstants.maxPosition)
+        {
+            subsystem.setRightSpeed(-climberSpeed);
         }
         else
         {
